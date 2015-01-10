@@ -7,7 +7,7 @@ Wrap all the CUDA API calls within gpuErrchk. For example:
 gpuErrchk(cudaMemcpy(d_x, x, N * sizeof(float), cudaMemcpyHostToDevice));
 ```
 
-Use gpuErrchk to check for errors in your kernels. For example:
+Use ```gpuErrchk``` to check for errors in your kernels. For example:
 
 ```
 #ifdef DEBUG
