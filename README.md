@@ -7,10 +7,12 @@ gpuErrchk(cudaMemcpy(d_x, x, N * sizeof(float), cudaMemcpyHostToDevice));
 
 Use gpuErrchk to check for errors in your kernels. For example:
 
- #ifdef DEBUG
+```
+#ifdef DEBUG
 		gpuErrchk(cudaPeekAtLastError());
 		gpuErrchk(cudaDeviceSynchronize());
- #endif
+#endif
+```
 
 If DEBUG is defined, then the CUDA error check of the kernels will be executed.
 
