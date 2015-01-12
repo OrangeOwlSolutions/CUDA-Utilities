@@ -1,4 +1,4 @@
-# CUDA_Utilities
+# CUDA Utilities
 Utilities for CUDA programming
 
 Wrap all the CUDA API calls within ```gpuErrchk```. For example:
