@@ -29,7 +29,7 @@ extern "C" void gpuErrchk(cudaError_t ans) { gpuAssert((ans), __FILE__, __LINE__
 /**************************/
 /* CUSOLVE ERROR CHECKING */
 /**************************/
-static const char *_cudaGetErrorEnum(cusolverStatus_t error)
+static const char *_cusolverGetErrorEnum(cusolverStatus_t error)
 {
     switch (error)
     {
@@ -66,9 +66,61 @@ inline void __cusolveSafeCall(cusolverStatus_t err, const char *file, const int 
 {
     if(CUSOLVER_STATUS_SUCCESS != err) {
 		fprintf(stderr, "CUSOLVE error in file '%s', line %d\n %s\nerror %d: %s\nterminating!\n",__FILE__, __LINE__,err, \
-                                _cudaGetErrorEnum(err)); \
+                                _cusolverGetErrorEnum(err)); \
 		cudaDeviceReset(); assert(0); \
 	}
 }
 
 extern "C" void cusolveSafeCall(cusolverStatus_t err) { __cusolveSafeCall(err, __FILE__, __LINE__); }
+
+/*************************/
+/* CUBLAS ERROR CHECKING */
+/*************************/
+static const char *_cublasGetErrorEnum(cublasStatus_t error)
+{
+    switch (error)
+    {
+        case CUBLAS_STATUS_SUCCESS:
+            return "CUBLAS_STATUS_SUCCESS";
+
+        case CUBLAS_STATUS_NOT_INITIALIZED:
+            return "CUBLAS_STATUS_NOT_INITIALIZED";
+
+        case CUBLAS_STATUS_ALLOC_FAILED:
+            return "CUBLAS_STATUS_ALLOC_FAILED";
+
+        case CUBLAS_STATUS_INVALID_VALUE:
+            return "CUBLAS_STATUS_INVALID_VALUE";
+
+        case CUBLAS_STATUS_ARCH_MISMATCH:
+            return "CUBLAS_STATUS_ARCH_MISMATCH";
+
+        case CUBLAS_STATUS_MAPPING_ERROR:
+            return "CUBLAS_STATUS_MAPPING_ERROR";
+
+        case CUBLAS_STATUS_EXECUTION_FAILED:
+            return "CUBLAS_STATUS_EXECUTION_FAILED";
+
+        case CUBLAS_STATUS_INTERNAL_ERROR:
+            return "CUBLAS_STATUS_INTERNAL_ERROR";
+
+        case CUBLAS_STATUS_NOT_SUPPORTED:
+            return "CUBLAS_STATUS_NOT_SUPPORTED";
+
+        case CUBLAS_STATUS_LICENSE_ERROR:
+            return "CUBLAS_STATUS_LICENSE_ERROR";
+}
+
+    return "<unknown>";
+}
+
+inline void __cublasSafeCall(cublasStatus_t err, const char *file, const int line)
+{
+    if(CUBLAS_STATUS_SUCCESS != err) {
+		fprintf(stderr, "CUBLAS error in file '%s', line %d\n %s\nerror %d: %s\nterminating!\n",__FILE__, __LINE__,err, \
+                                _cublasGetErrorEnum(err)); \
+		cudaDeviceReset(); assert(0); \
+	}
+}
+
+extern "C" void cublasSafeCall(cublasStatus_t err) { __cublasSafeCall(err, __FILE__, __LINE__); }
