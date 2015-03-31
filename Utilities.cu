@@ -5,6 +5,8 @@
 #include <cuda.h>
 
 #include <cusolverDn.h>
+#include <cublas_v2.h>
+#include <cufft.h>
 
 /*******************/
 /* iDivUp FUNCTION */
@@ -124,3 +126,56 @@ inline void __cublasSafeCall(cublasStatus_t err, const char *file, const int lin
 }
 
 extern "C" void cublasSafeCall(cublasStatus_t err) { __cublasSafeCall(err, __FILE__, __LINE__); }
+
+/************************/
+/* CUFFT ERROR CHECKING */
+/************************/
+static const char *_cufftGetErrorEnum(cufftResult error)
+{
+    switch (error)
+    {
+        case CUFFT_SUCCESS:
+            return "CUFFT_SUCCESS";
+
+        case CUFFT_INVALID_PLAN:
+            return "CUFFT_INVALID_PLAN";
+
+        case CUFFT_ALLOC_FAILED:
+            return "CUFFT_ALLOC_FAILED";
+
+        case CUFFT_INVALID_TYPE:
+            return "CUFFT_INVALID_TYPE";
+
+        case CUFFT_INVALID_VALUE:
+            return "CUFFT_INVALID_VALUE";
+
+        case CUFFT_INTERNAL_ERROR:
+            return "CUFFT_INTERNAL_ERROR";
+
+        case CUFFT_EXEC_FAILED:
+            return "CUFFT_EXEC_FAILED";
+
+        case CUFFT_SETUP_FAILED:
+            return "CUFFT_SETUP_FAILED";
+
+        case CUFFT_INVALID_SIZE:
+            return "CUFFT_INVALID_SIZE";
+
+        case CUFFT_UNALIGNED_DATA:
+            return "CUFFT_UNALIGNED_DATA";
+    }
+
+    return "<unknown>";
+}
+
+// --- CUFFTSAFECALL
+inline void __cufftSafeCall(cufftResult err, const char *file, const int line)
+{
+    if( CUFFT_SUCCESS != err) {
+		fprintf(stderr, "CUFFT error in file '%s', line %d\n \nerror %d: %s\nterminating!\n",__FILE__, __LINE__,err, _cufftGetErrorEnum(err));
+		cudaDeviceReset(); assert(0);
+    }
+}
+
+extern "C" void cufftSafeCall(cufftResult err) { __cufftSafeCall(err, __FILE__, __LINE__); }
+
