@@ -8,6 +8,8 @@
 #include <cublas_v2.h>
 #include <cufft.h>
 
+#include "Utilities.cuh"
+
 /*******************/
 /* iDivUp FUNCTION */
 /*******************/
