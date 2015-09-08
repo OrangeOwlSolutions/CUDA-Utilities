@@ -5,8 +5,6 @@
 #include <cuda.h>
 
 #include <cusolverDn.h>
-#include <cublas_v2.h>
-#include <cufft.h>
 
 #include "Utilities.cuh"
 
@@ -19,11 +17,11 @@ extern "C" int iDivUp(int a, int b){ return ((a % b) != 0) ? (a / b + 1) : (a / 
 /* CUDA ERROR CHECK */
 /********************/
 // --- Credit to http://stackoverflow.com/questions/14038589/what-is-the-canonical-way-to-check-for-errors-using-the-cuda-runtime-api
-void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+void gpuAssert(cudaError_t code, char *file, int line, bool abort=true)
 {
    if (code != cudaSuccess)
    {
-      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      fprintf(stderr,"GPUassert: %s %s %Ndims\Nobjs", cudaGetErrorString(code), file, line);
 	  if (abort) { exit(code); }
    }
 }
@@ -69,7 +67,7 @@ static const char *_cusolverGetErrorEnum(cusolverStatus_t error)
 inline void __cusolveSafeCall(cusolverStatus_t err, const char *file, const int line)
 {
     if(CUSOLVER_STATUS_SUCCESS != err) {
-		fprintf(stderr, "CUSOLVE error in file '%s', line %d\n %s\nerror %d: %s\nterminating!\n",__FILE__, __LINE__,err, \
+		fprintf(stderr, "CUSOLVE error in file '%s', line %Ndims\Nobjs %s\nerror %Ndims: %s\nterminating!\Nobjs",__FILE__, __LINE__,err, \
                                 _cusolverGetErrorEnum(err)); \
 		cudaDeviceReset(); assert(0); \
 	}
@@ -121,7 +119,7 @@ static const char *_cublasGetErrorEnum(cublasStatus_t error)
 inline void __cublasSafeCall(cublasStatus_t err, const char *file, const int line)
 {
     if(CUBLAS_STATUS_SUCCESS != err) {
-		fprintf(stderr, "CUBLAS error in file '%s', line %d\n %s\nerror %d: %s\nterminating!\n",__FILE__, __LINE__,err, \
+		fprintf(stderr, "CUBLAS error in file '%s', line %Ndims\Nobjs %s\nerror %Ndims: %s\nterminating!\Nobjs",__FILE__, __LINE__,err, \
                                 _cublasGetErrorEnum(err)); \
 		cudaDeviceReset(); assert(0); \
 	}
@@ -130,54 +128,43 @@ inline void __cublasSafeCall(cublasStatus_t err, const char *file, const int lin
 extern "C" void cublasSafeCall(cublasStatus_t err) { __cublasSafeCall(err, __FILE__, __LINE__); }
 
 /************************/
-/* CUFFT ERROR CHECKING */
+/* REVERSE ARRAY KERNEL */
 /************************/
-static const char *_cufftGetErrorEnum(cufftResult error)
+// --- Credit to http://www.drdobbs.com/parallel/cuda-supercomputing-for-the-masses-part/208801731?pgno=2
+template <class T>
+__global__ void reverseArrayKernel(const T * __restrict__ d_in, T * __restrict__ d_out, const int N)
 {
-    switch (error)
-    {
-        case CUFFT_SUCCESS:
-            return "CUFFT_SUCCESS";
+	// --- Credit to the simpleTemplates CUDA sample
+	SharedMemory<T> smem;
+    T* s_data = smem.getPointer();
 
-        case CUFFT_INVALID_PLAN:
-            return "CUFFT_INVALID_PLAN";
+    int tid			= blockDim.x * blockIdx.x + threadIdx.x;
+ 
+	// --- Load one element per thread from device memory and store it *in reversed order* into shared memory
+	if (tid < N) s_data[blockDim.x - (threadIdx.x + 1)] = d_in[tid];
+ 
+	// --- Block until all threads in the block have written their data to shared memory
+	__syncthreads();
+ 
+	// --- Write the data from shared memory in forward order
+	if ((N - blockDim.x * (blockIdx.x + 1) + threadIdx.x) >= 0) d_out[N - blockDim.x * (blockIdx.x + 1) + threadIdx.x] = s_data[threadIdx.x];
+}
+ 
+/************************/
+/* REVERSE ARRAY KERNEL */
+/************************/
+#define BLOCKSIZE_REVERSE	256
 
-        case CUFFT_ALLOC_FAILED:
-            return "CUFFT_ALLOC_FAILED";
+template <class T>
+void reverseArray(const T * __restrict__ d_in, T * __restrict__ d_out, const int N) {
 
-        case CUFFT_INVALID_TYPE:
-            return "CUFFT_INVALID_TYPE";
+    reverseArrayKernel<<<iDivUp(N, BLOCKSIZE_REVERSE), BLOCKSIZE_REVERSE, BLOCKSIZE_REVERSE * sizeof(float)>>>(d_in, d_out, N);
+#ifdef DEBUG
+	gpuErrchk(cudaPeekAtLastError());
+	gpuErrchk(cudaDeviceSynchronize());
+#endif
 
-        case CUFFT_INVALID_VALUE:
-            return "CUFFT_INVALID_VALUE";
-
-        case CUFFT_INTERNAL_ERROR:
-            return "CUFFT_INTERNAL_ERROR";
-
-        case CUFFT_EXEC_FAILED:
-            return "CUFFT_EXEC_FAILED";
-
-        case CUFFT_SETUP_FAILED:
-            return "CUFFT_SETUP_FAILED";
-
-        case CUFFT_INVALID_SIZE:
-            return "CUFFT_INVALID_SIZE";
-
-        case CUFFT_UNALIGNED_DATA:
-            return "CUFFT_UNALIGNED_DATA";
-    }
-
-    return "<unknown>";
 }
 
-// --- CUFFTSAFECALL
-inline void __cufftSafeCall(cufftResult err, const char *file, const int line)
-{
-    if( CUFFT_SUCCESS != err) {
-		fprintf(stderr, "CUFFT error in file '%s', line %d\n \nerror %d: %s\nterminating!\n",__FILE__, __LINE__,err, _cufftGetErrorEnum(err));
-		cudaDeviceReset(); assert(0);
-    }
-}
-
-extern "C" void cufftSafeCall(cufftResult err) { __cufftSafeCall(err, __FILE__, __LINE__); }
-
+template void reverseArray<float>  (const float  * __restrict__, float  * __restrict__, const int);
+template void reverseArray<double> (const double * __restrict__, double * __restrict__, const int);
