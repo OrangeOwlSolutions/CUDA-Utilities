@@ -14,4 +14,10 @@ template <class T> T * linspace(const T, const T, const unsigned int);
 template <class T>
 thrust::pair<T *,T *> meshgrid(const T *, const unsigned int, const T *, const unsigned int);
 
+/*********/
+/* COLON */
+/*********/
+template <class T>
+T * colon(const T, const T, const T);
+
 #endif
