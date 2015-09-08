@@ -64,3 +64,25 @@ thrust::pair<T *,T *> meshgrid(const T *x, const unsigned int Nx, const T *y, co
 
 template thrust::pair<float  *, float  *>  meshgrid<float>  (const float  *, const unsigned int, const float  *, const unsigned int);
 template thrust::pair<double *, double *>  meshgrid<double> (const double *, const unsigned int, const double *, const unsigned int);
+
+/*********/
+/* COLON */
+/*********/
+#include <thrust/sequence.h>
+
+template <class T>
+T * colon(const T a, const T step, const T b) {
+	
+	int N = (int)((b - a)/step) + 1;
+
+	T *out_array; gpuErrchk(cudaMalloc((void**)&out_array, N * sizeof(T)));
+
+	thrust::device_ptr<T> d = thrust::device_pointer_cast(out_array); 	
+
+	thrust::sequence(d, d + N, a, step);
+
+	return out_array;
+}
+
+template float  * colon<float>  (const float  a, const float  step, const float  b);
+template double * colon<double> (const double a, const double step, const double b);
