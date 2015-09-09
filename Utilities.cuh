@@ -12,6 +12,9 @@ extern "C" void cublasSafeCall(cublasStatus_t);
 template <class T>
 void reverseArray(const T * __restrict__, T * __restrict__, const int);
 
+template <class T>
+void reverseAndNegateArray(const T * __restrict__, T * __restrict__, const int);
+
 /**************************/
 /* TEMPLATE SHARED MEMORY */
 /**************************/
