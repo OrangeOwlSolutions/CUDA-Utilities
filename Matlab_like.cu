@@ -86,3 +86,27 @@ T * colon(const T a, const T step, const T b) {
 
 template float  * colon<float>  (const float  a, const float  step, const float  b);
 template double * colon<double> (const double a, const double step, const double b);
+
+/*****************************/
+/* GENERATE SYMMETRIC POINTS */
+/*****************************/
+template<class T> 
+T * generateSymmetricPoints(const T step, const T b) {
+
+	const int N = (int)(b / step) + 1;
+
+	T *d_u;	gpuErrchk(cudaMalloc(&d_u, (2 * N - 1) * sizeof(T)));
+	
+	T *d_u_temp = colon(static_cast<T>(0), step, b);
+
+	gpuErrchk(cudaMemcpy(d_u + N - 1, d_u_temp, N * sizeof(T), cudaMemcpyDeviceToDevice));
+	
+ 	reverseAndNegateArray(d_u_temp + 1, d_u, N - 1);
+
+	gpuErrchk(cudaFree(d_u_temp));
+
+	return d_u;
+}
+
+template float  * generateSymmetricPoints<float>  (const float , const float );
+template double * generateSymmetricPoints<double> (const double, const double);
