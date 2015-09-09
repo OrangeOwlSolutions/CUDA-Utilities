@@ -20,4 +20,10 @@ thrust::pair<T *,T *> meshgrid(const T *, const unsigned int, const T *, const u
 template <class T>
 T * colon(const T, const T, const T);
 
+/*****************************/
+/* GENERATE SYMMETRIC POINTS */
+/*****************************/
+template<class T> 
+T * generateSymmetricPoints(const T step, const T b);
+
 #endif
