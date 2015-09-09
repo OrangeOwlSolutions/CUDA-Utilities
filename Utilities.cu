@@ -8,6 +8,8 @@
 
 #include "Utilities.cuh"
 
+#define DEBUG
+
 /*******************/
 /* iDivUp FUNCTION */
 /*******************/
@@ -21,7 +23,7 @@ void gpuAssert(cudaError_t code, char *file, int line, bool abort=true)
 {
    if (code != cudaSuccess)
    {
-      fprintf(stderr,"GPUassert: %s %s %Ndims\Nobjs", cudaGetErrorString(code), file, line);
+      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
 	  if (abort) { exit(code); }
    }
 }
@@ -130,6 +132,8 @@ extern "C" void cublasSafeCall(cublasStatus_t err) { __cublasSafeCall(err, __FIL
 /************************/
 /* REVERSE ARRAY KERNEL */
 /************************/
+#define BLOCKSIZE_REVERSE	256
+
 // --- Credit to http://www.drdobbs.com/parallel/cuda-supercomputing-for-the-masses-part/208801731?pgno=2
 template <class T>
 __global__ void reverseArrayKernel(const T * __restrict__ d_in, T * __restrict__ d_out, const int N)
@@ -138,27 +142,27 @@ __global__ void reverseArrayKernel(const T * __restrict__ d_in, T * __restrict__
 	SharedMemory<T> smem;
     T* s_data = smem.getPointer();
 
-    int tid			= blockDim.x * blockIdx.x + threadIdx.x;
- 
+    const int tid			= blockDim.x * blockIdx.x + threadIdx.x;
+	const int id			= threadIdx.x;
+	const int offset		= blockDim.x * (blockIdx.x + 1);
+
 	// --- Load one element per thread from device memory and store it *in reversed order* into shared memory
-	if (tid < N) s_data[blockDim.x - (threadIdx.x + 1)] = d_in[tid];
+	if (tid < N) s_data[BLOCKSIZE_REVERSE - (id + 1)] = d_in[tid]; 
  
 	// --- Block until all threads in the block have written their data to shared memory
 	__syncthreads();
  
 	// --- Write the data from shared memory in forward order
-	if ((N - blockDim.x * (blockIdx.x + 1) + threadIdx.x) >= 0) d_out[N - blockDim.x * (blockIdx.x + 1) + threadIdx.x] = s_data[threadIdx.x];
+	if ((N - offset + id) >= 0) d_out[N - offset + id] = s_data[threadIdx.x]; 
 }
  
 /************************/
 /* REVERSE ARRAY KERNEL */
 /************************/
-#define BLOCKSIZE_REVERSE	256
-
 template <class T>
 void reverseArray(const T * __restrict__ d_in, T * __restrict__ d_out, const int N) {
 
-    reverseArrayKernel<<<iDivUp(N, BLOCKSIZE_REVERSE), BLOCKSIZE_REVERSE, BLOCKSIZE_REVERSE * sizeof(float)>>>(d_in, d_out, N);
+    reverseArrayKernel<<<iDivUp(N, BLOCKSIZE_REVERSE), BLOCKSIZE_REVERSE, BLOCKSIZE_REVERSE * sizeof(T)>>>(d_in, d_out, N);
 #ifdef DEBUG
 	gpuErrchk(cudaPeekAtLastError());
 	gpuErrchk(cudaDeviceSynchronize());
@@ -168,3 +172,45 @@ void reverseArray(const T * __restrict__ d_in, T * __restrict__ d_out, const int
 
 template void reverseArray<float>  (const float  * __restrict__, float  * __restrict__, const int);
 template void reverseArray<double> (const double * __restrict__, double * __restrict__, const int);
+
+/***********************************/
+/* REVERSE AND NEGATE ARRAY KERNEL */
+/***********************************/
+// --- Credit to http://www.drdobbs.com/parallel/cuda-supercomputing-for-the-masses-part/208801731?pgno=2
+template <class T>
+__global__ void reverseAndNegateArrayKernel(const T * __restrict__ d_in, T * __restrict__ d_out, const int N)
+{
+	// --- Credit to the simpleTemplates CUDA sample
+	SharedMemory<T> smem;
+    T* s_data = smem.getPointer();
+
+    const int tid			= blockDim.x * blockIdx.x + threadIdx.x;
+	const int id			= threadIdx.x;
+	const int offset		= blockDim.x * (blockIdx.x + 1);
+
+	// --- Load one element per thread from device memory and store it *in reversed order* into shared memory
+	if (tid < N) s_data[BLOCKSIZE_REVERSE - (id + 1)] = -d_in[tid]; 
+ 
+	// --- Block until all threads in the block have written their data to shared memory
+	__syncthreads();
+ 
+	// --- Write the data from shared memory in forward order
+	if ((N - offset + id) >= 0) d_out[N - offset + id] = s_data[threadIdx.x]; 
+}
+ 
+/************************/
+/* REVERSE ARRAY KERNEL */
+/************************/
+template <class T>
+void reverseAndNegateArray(const T * __restrict__ d_in, T * __restrict__ d_out, const int N) {
+
+    reverseAndNegateArrayKernel<<<iDivUp(N, BLOCKSIZE_REVERSE), BLOCKSIZE_REVERSE, BLOCKSIZE_REVERSE * sizeof(T)>>>(d_in, d_out, N);
+#ifdef DEBUG
+	gpuErrchk(cudaPeekAtLastError());
+	gpuErrchk(cudaDeviceSynchronize());
+#endif
+
+}
+
+template void reverseAndNegateArray<float>  (const float  * __restrict__, float  * __restrict__, const int);
+template void reverseAndNegateArray<double> (const double * __restrict__, double * __restrict__, const int);
