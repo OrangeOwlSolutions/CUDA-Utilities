@@ -51,7 +51,7 @@ thrust::pair<T *,T *> meshgrid(const T *x, const unsigned int Nx, const T *y, co
 	T *Y; gpuErrchk(cudaMalloc((void**)&Y, Nx * Ny * sizeof(T)));
 
 	dim3 BlockSize(BLOCKSIZE_MESHGRID_X, BLOCKSIZE_MESHGRID_Y);
-	dim3 GridSize (iDivUp(Nx, BLOCKSIZE_MESHGRID_X), iDivUp(BLOCKSIZE_MESHGRID_Y, BLOCKSIZE_MESHGRID_Y));
+	dim3 GridSize (iDivUp(Nx, BLOCKSIZE_MESHGRID_X), iDivUp(Ny, BLOCKSIZE_MESHGRID_Y));
 	
 	meshgrid_kernel<<<GridSize, BlockSize>>>(x, Nx, y, Ny, X, Y);
 #ifdef DEBUG
