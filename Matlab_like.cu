@@ -101,7 +101,7 @@ T * generateSymmetricPoints(const T step, const T b) {
 
 	gpuErrchk(cudaMemcpy(d_u + N - 1, d_u_temp, N * sizeof(T), cudaMemcpyDeviceToDevice));
 	
- 	reverseAndNegateArray(d_u_temp + 1, d_u, N - 1);
+ 	reverseArray(d_u_temp + 1, d_u, N - 1, static_cast<T>(-1));
 
 	gpuErrchk(cudaFree(d_u_temp));
 
