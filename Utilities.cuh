@@ -10,7 +10,7 @@ extern "C" void cusolveSafeCall(cusolverStatus_t);
 extern "C" void cublasSafeCall(cublasStatus_t);
 
 template <class T>
-void reverseArray(const T * __restrict__, T * __restrict__, const int);
+void reverseArray(const T * __restrict__, T * __restrict__, const int, const T a = static_cast<T>(1));
 
 /**************************/
 /* TEMPLATE SHARED MEMORY */
