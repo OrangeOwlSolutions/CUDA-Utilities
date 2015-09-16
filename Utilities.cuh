@@ -12,6 +12,9 @@ extern "C" void cublasSafeCall(cublasStatus_t);
 template <class T>
 void reverseArray(const T * __restrict__, T * __restrict__, const int, const T a = static_cast<T>(1));
 
+template <class T>
+void linearCombination(const T * __restrict__, const T * __restrict__, T * __restrict__, const int, const int, const cublasHandle_t);
+
 /**************************/
 /* TEMPLATE SHARED MEMORY */
 /**************************/
