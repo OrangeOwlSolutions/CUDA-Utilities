@@ -1,3 +1,5 @@
+#include <cublas_v2.h>
+
 #include <stdio.h>
 #include <assert.h>
 
@@ -173,3 +175,25 @@ void reverseArray(const T * __restrict__ d_in, T * __restrict__ d_out, const int
 template void reverseArray<float>  (const float  * __restrict__, float  * __restrict__, const int, const float);
 template void reverseArray<double> (const double * __restrict__, double * __restrict__, const int, const double);
 
+/********************************************/
+/* LINEAR COMBINATION FUNCTION - FLOAT CASE */
+/********************************************/
+void linearCombination(const float * __restrict__ d_coeff, const float * __restrict__ d_basis_functions_real, float * __restrict__ d_linear_combination,
+	                   const int N_basis_functions, const int N_sampling_points, const cublasHandle_t handle) {
+
+    float alpha = 1.f;
+    float beta  = 0.f;
+    cublasSafeCall(cublasSgemv(handle, CUBLAS_OP_N, N_sampling_points, N_basis_functions, &alpha, d_basis_functions_real, N_sampling_points, 
+                               d_coeff, 1, &beta, d_linear_combination, 1));
+
+}
+
+void linearCombination(const double * __restrict__ d_coeff, const double * __restrict__ d_basis_functions_real, double * __restrict__ d_linear_combination,
+	                   const int N_basis_functions, const int N_sampling_points, const cublasHandle_t handle) {
+
+    double alpha = 1.;
+    double beta  = 0.;
+    cublasSafeCall(cublasDgemv(handle, CUBLAS_OP_N, N_sampling_points, N_basis_functions, &alpha, d_basis_functions_real, N_sampling_points, 
+                               d_coeff, 1, &beta, d_linear_combination, 1));
+
+}
