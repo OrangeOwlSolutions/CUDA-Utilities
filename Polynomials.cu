@@ -254,3 +254,43 @@ __host__ __device__ T Zernikep(const unsigned int p, const T r, const T theta, c
 
 template __host__ __device__ float  Zernikep<float> (const unsigned int p, const float  r, const float  theta, const bool normalize, const ZernikeEvaluationMethod eval_method);
 template __host__ __device__ double Zernikep<double>(const unsigned int p, const double r, const double theta, const bool normalize, const ZernikeEvaluationMethod eval_method);
+
+/******************************************/
+/* ZERNIKE POLYNOMIALS CALCULATION KERNEL */
+/******************************************/
+#define BLOCKSIZE_ZERNIKE_X	16
+#define BLOCKSIZE_ZERNIKE_Y	16
+
+template <class T>
+__global__ void generateZernikepKernel(T * __restrict__ d_Zernike, const T * __restrict__ d_rho, const T * __restrict__ d_theta, const int maxDegree, const int N) {
+
+	const int tid_x = blockDim.x * blockIdx.x + threadIdx.x;
+	const int tid_y = blockDim.y * blockIdx.y + threadIdx.y;
+
+	if ((tid_x < N) && (tid_y < maxDegree)) d_Zernike[tid_y * N + tid_x] = Zernikep(tid_y + 1, d_rho[tid_x], d_theta[tid_x]);
+
+}
+	
+/**************************************************************************/
+/* ZERNIKE POLYNOMIALS CALCULATION FUNCTION - SINGLE INDEX - (x, y) INPUT */
+/**************************************************************************/
+
+// --- Zernike polynomials with single index.
+template <class T>
+T * generateZernikep(const T * __restrict__ d_rho, const T * __restrict__ d_theta, const int maxDegree, const int N) {
+
+	T *d_Zernike;	gpuErrchk(cudaMalloc(&d_Zernike, N * maxDegree * sizeof(T)));
+	
+	dim3 GridSize(iDivUp(N, BLOCKSIZE_ZERNIKE_X), iDivUp(maxDegree, BLOCKSIZE_ZERNIKE_Y));
+	dim3 BlockSize(BLOCKSIZE_ZERNIKE_X, BLOCKSIZE_ZERNIKE_Y);
+	generateZernikepKernel<<<GridSize, BlockSize>>>(d_Zernike, d_rho, d_theta, maxDegree, N);
+#ifdef DEBUG
+	gpuErrchk(cudaPeekAtLastError());
+	gpuErrchk(cudaDeviceSynchronize());
+#endif
+
+	return d_Zernike;
+}
+
+template float  * generateZernikep<float> (const float  * __restrict__ d_rho, const float  * __restrict__ d_theta, const int maxDegree, const int N);
+template double * generateZernikep<double>(const double * __restrict__ d_rho, const double * __restrict__ d_theta, const int maxDegree, const int N);
