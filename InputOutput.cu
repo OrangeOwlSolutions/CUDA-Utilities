@@ -9,7 +9,7 @@
 #define prec_save 10
 
 /***********************************************/
-/* SAVE INDIVIDUAL REAL CPU MATRIX TO txt FILE */
+/* SAVE INDIVIDUAL REAL GPU MATRIX TO txt FILE */
 /***********************************************/
 template <class T>
 void saveGPUrealtxt(const T * d_in, const char *filename, const int M) {
@@ -27,4 +27,29 @@ void saveGPUrealtxt(const T * d_in, const char *filename, const int M) {
 
 template void saveGPUrealtxt<float> (const float  *, const char *, const int);
 template void saveGPUrealtxt<double>(const double *, const char *, const int);
+
+/****************************************************/
+/* LOAD INDIVIDUAL REAL MATRIX FROM txt FILE TO GPU */
+/****************************************************/
+// --- Load individual real matrix from txt file
+template <class T>
+T * loadGPUrealtxt(const char *filename, T * __restrict__ d_out, const int M) {
+		
+	T *h_out	= (T *)malloc(M * sizeof(T));
+	//T *d_out;	gpuErrchk(cudaMalloc(&d_out, M * sizeof(T)));
+	gpuErrchk(cudaMalloc(&d_out, M * sizeof(T)));
+
+	std::ifstream infile;
+	infile.open(filename);
+	for(int i = 0; i < M; i++) infile >> h_out[i]; 
+	infile.close();
+
+	gpuErrchk(cudaMemcpy(d_out, h_out, M * sizeof(T), cudaMemcpyHostToDevice));
+	
+	return d_out;
+
+}
+
+template float  * loadGPUrealtxt<float> (const char *, float  * __restrict__, const int);
+template double * loadGPUrealtxt<double>(const char *, double * __restrict__, const int);
 
