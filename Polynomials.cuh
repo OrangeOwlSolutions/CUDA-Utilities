@@ -29,4 +29,6 @@ template <class T> __host__ __device__ T Zernikenm(const unsigned int n, const i
 
 template <class T> __host__ __device__ T Zernikep(const unsigned int p, const T r, const T theta, const bool normalize = 0, const ZernikeEvaluationMethod eval_method = direct);
 
+template <class T> T * generateZernikep(const T * __restrict__ d_rho, const T * __restrict__ d_theta, const int maxDegree, const int N);
+
 #endif
