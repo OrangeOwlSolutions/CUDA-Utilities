@@ -83,6 +83,51 @@ T * generateLegendre(const T * __restrict__ d_x, const int maxDegree, const int 
 template float  *  generateLegendre<float> (const float  * __restrict__, const int, const int);
 template double *  generateLegendre<double>(const double * __restrict__, const int, const int);
 
+/******************************************************/
+/* FACTORIZED LEGENDRE POLYNOMIALS CALCULATION KERNEL */
+/******************************************************/
+template <class T>
+__global__ void generateLegendreFactorizedKernel(T * __restrict__ d_Leg, const T * __restrict__ d_X, const T * __restrict__ d_Y, 
+	                                             const int maxDegreeX, const int maxDegreeY, const int N) {
+
+	const int tid_x = blockDim.x * blockIdx.x + threadIdx.x;
+	const int tid_y = blockDim.y * blockIdx.y + threadIdx.y;
+	const int tid_z = blockDim.z * blockIdx.z + threadIdx.z;
+
+	if ((tid_x < N) && (tid_y < maxDegreeX) && (tid_z < maxDegreeY)) {
+		printf("%i %i\n", tid_y, tid_z);
+		d_Leg[(tid_z * maxDegreeX + tid_y) * N + tid_x] = LegendreN(tid_y, d_X[tid_x]) * LegendreN(tid_z, d_Y[tid_x]);
+	}
+
+}
+	
+/********************************************************/
+/* FACTORIZED LEGENDRE POLYNOMIALS CALCULATION FUNCTION */
+/********************************************************/
+#define BLOCKSIZE_LEGENDRE_FACTORIZED_X		16
+#define BLOCKSIZE_LEGENDRE_FACTORIZED_Y		8
+#define BLOCKSIZE_LEGENDRE_FACTORIZED_Z		8
+
+template <class T>
+T * generateLegendreFactorized(const T * __restrict__ d_X, const T * __restrict__ d_Y, const int maxDegreeX, const int maxDegreeY, const int N) {
+
+	T *d_Leg;	gpuErrchk(cudaMalloc(&d_Leg, maxDegreeX * maxDegreeY * N * sizeof(T)));
+	
+	dim3 GridSize(iDivUp(N, BLOCKSIZE_LEGENDRE_FACTORIZED_X), iDivUp(maxDegreeX, BLOCKSIZE_LEGENDRE_FACTORIZED_Y), iDivUp(maxDegreeY, BLOCKSIZE_LEGENDRE_FACTORIZED_Z));
+	dim3 BlockSize(BLOCKSIZE_LEGENDRE_FACTORIZED_X, BLOCKSIZE_LEGENDRE_FACTORIZED_Y, BLOCKSIZE_LEGENDRE_FACTORIZED_Z);
+	generateLegendreFactorizedKernel<<<GridSize, BlockSize>>>(d_Leg, d_X, d_Y, maxDegreeX, maxDegreeY, N);
+#ifdef DEBUG
+	gpuErrchk(cudaPeekAtLastError());
+	gpuErrchk(cudaDeviceSynchronize());
+#endif
+
+	return d_Leg;
+
+}
+
+template float  *  generateLegendreFactorized<float> (const float  * __restrict__, const float  * __restrict__, const int, const int, const int);
+template double *  generateLegendreFactorized<double>(const double * __restrict__, const double * __restrict__, const int, const int, const int);
+
 /************************/
 /* BINOMIAL COEFFICIENT */
 /************************/
