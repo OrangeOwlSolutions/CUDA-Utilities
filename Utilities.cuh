@@ -4,6 +4,8 @@
 #include <cusolverDn.h>
 #include <cublas_v2.h>
 
+#include <thrust\pair.h>
+
 extern "C" int iDivUp(int, int);
 extern "C" void gpuErrchk(cudaError_t);
 extern "C" void cusolveSafeCall(cusolverStatus_t);
@@ -11,6 +13,9 @@ extern "C" void cublasSafeCall(cublasStatus_t);
 
 template <class T>
 void reverseArray(const T * __restrict__, T * __restrict__, const int, const T a = static_cast<T>(1));
+
+template <class T>
+thrust::pair<T *,T *> Cartesian2Polar(const T * __restrict__ d_x, const T * __restrict__ d_y, const int N, const T a = static_cast<T>(1));
 
 template <class T>
 void linearCombination(const T * __restrict__, const T * __restrict__, T * __restrict__, const int, const int, const cublasHandle_t);
