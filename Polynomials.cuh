@@ -10,6 +10,9 @@ inline __host__ __device__ T LegendreN(unsigned int, const T&);
 template <class T>
 T * generateLegendre(const T * __restrict__, const int, const int);
 
+template <class T>
+T * generateLegendreFactorized(const T * __restrict__, const T * __restrict__, const int, const int, const int);
+
 /***********/
 /* ZERNIKE */
 /***********/
