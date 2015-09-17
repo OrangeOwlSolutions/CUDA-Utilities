@@ -175,6 +175,45 @@ void reverseArray(const T * __restrict__ d_in, T * __restrict__ d_out, const int
 template void reverseArray<float>  (const float  * __restrict__, float  * __restrict__, const int, const float);
 template void reverseArray<double> (const double * __restrict__, double * __restrict__, const int, const double);
 
+/********************************************************/
+/* CARTESIAN TO POLAR COORDINATES TRANSFORMATION KERNEL */
+/********************************************************/
+#define BLOCKSIZE_CART2POL	256
+
+template <class T>
+__global__ void Cartesian2PolarKernel(const T * __restrict__ d_x, const T * __restrict__ d_y, T * __restrict__ d_rho, T * __restrict__ d_theta, 
+	                       const int N, const T a) {
+
+	const int tid = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (tid < N) {
+		d_rho[tid]		= a * hypot(d_x[tid], d_y[tid]);
+		d_theta[tid]	= atan2(d_y[tid], d_x[tid]);
+	}
+
+}
+
+/*************************************************/
+/* CARTESIAN TO POLAR COORDINATES TRANSFORMATION */
+/*************************************************/
+template <class T>
+thrust::pair<T *,T *> Cartesian2Polar(const T * __restrict__ d_x, const T * __restrict__ d_y, const int N, const T a) {
+
+	T *d_rho;	gpuErrchk(cudaMalloc((void**)&d_rho,   N * sizeof(T)));
+	T *d_theta; gpuErrchk(cudaMalloc((void**)&d_theta, N * sizeof(T)));
+
+	Cartesian2PolarKernel<<<iDivUp(N, BLOCKSIZE_CART2POL), BLOCKSIZE_CART2POL>>>(d_x, d_y, d_rho, d_theta, N, a);
+#ifdef DEBUG
+	gpuErrchk(cudaPeekAtLastError());
+	gpuErrchk(cudaDeviceSynchronize());
+#endif
+
+	return thrust::make_pair(d_rho, d_theta);
+}
+
+template thrust::pair<float  *, float  *>  Cartesian2Polar<float>  (const float  *, const float  *, const int, const float);
+template thrust::pair<double *, double *>  Cartesian2Polar<double> (const double *, const double *, const int, const double);
+
 /********************************************/
 /* LINEAR COMBINATION FUNCTION - FLOAT CASE */
 /********************************************/
