@@ -4,6 +4,7 @@
 #include <cuda.h>
 
 #include "InputOutput.cuh"
+#include "BBComplex.h"
 #include "Utilities.cuh"
 
 #define prec_save 10
@@ -27,6 +28,26 @@ void saveGPUrealtxt(const T * d_in, const char *filename, const int M) {
 
 template void saveGPUrealtxt<float> (const float  *, const char *, const int);
 template void saveGPUrealtxt<double>(const double *, const char *, const int);
+
+/**************************************************/
+/* SAVE INDIVIDUAL COMPLEX GPU MATRIX TO txt FILE */
+/**************************************************/
+template <class T>
+void saveGPUcomplextxt(const T * d_in, const char *filename, const int M) {
+	
+	T *h_in	= (T *)malloc(M * sizeof(T));
+	
+	gpuErrchk(cudaMemcpy(h_in, d_in, M * sizeof(T), cudaMemcpyDeviceToHost));
+	
+	std::ofstream outfile;
+	outfile.open(filename);
+	for(int i = 0; i < M; i++) { outfile << std::setprecision(prec_save) << h_in[i].c.x << "\n"; outfile << std::setprecision(prec_save) << h_in[i].c.y << "\n";}
+	outfile.close();
+
+}
+
+template void saveGPUcomplextxt<float2_> (const float2_  *, const char *, const int);
+template void saveGPUcomplextxt<double2_>(const double2_ *, const char *, const int);
 
 /****************************************************/
 /* LOAD INDIVIDUAL REAL MATRIX FROM txt FILE TO GPU */
