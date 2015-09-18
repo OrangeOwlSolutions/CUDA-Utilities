@@ -20,6 +20,9 @@ thrust::pair<T *,T *> Cartesian2Polar(const T * __restrict__ d_x, const T * __re
 template <class T>
 void linearCombination(const T * __restrict__, const T * __restrict__, T * __restrict__, const int, const int, const cublasHandle_t);
 
+template<class T>
+void vectorAddConstant(T * __restrict__, const T, const int);
+
 /**************************/
 /* TEMPLATE SHARED MEMORY */
 /**************************/
