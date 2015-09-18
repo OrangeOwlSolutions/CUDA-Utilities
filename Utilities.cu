@@ -214,9 +214,9 @@ thrust::pair<T *,T *> Cartesian2Polar(const T * __restrict__ d_x, const T * __re
 template thrust::pair<float  *, float  *>  Cartesian2Polar<float>  (const float  *, const float  *, const int, const float);
 template thrust::pair<double *, double *>  Cartesian2Polar<double> (const double *, const double *, const int, const double);
 
-/********************************************/
-/* LINEAR COMBINATION FUNCTION - FLOAT CASE */
-/********************************************/
+/*******************************/
+/* LINEAR COMBINATION FUNCTION */
+/*******************************/
 void linearCombination(const float * __restrict__ d_coeff, const float * __restrict__ d_basis_functions_real, float * __restrict__ d_linear_combination,
 	                   const int N_basis_functions, const int N_sampling_points, const cublasHandle_t handle) {
 
@@ -236,3 +236,27 @@ void linearCombination(const double * __restrict__ d_coeff, const double * __res
                                d_coeff, 1, &beta, d_linear_combination, 1));
 
 }
+
+/******************************/
+/* ADD A CONSTANT TO A VECTOR */
+/******************************/
+#define BLOCKSIZE_VECTORADDCONSTANT	256
+
+template<class T>
+__global__ void vectorAddConstantKernel(T * __restrict__ d_in, const T scalar, const int N) {
+    
+	const int tid	= threadIdx.x + blockIdx.x*blockDim.x;
+    
+	if (tid < N) d_in[tid] += scalar;
+
+}
+
+template<class T>
+void vectorAddConstant(T * __restrict__ d_in, const T scalar, const int N) {
+    
+	vectorAddConstantKernel<<<iDivUp(N, BLOCKSIZE_VECTORADDCONSTANT), BLOCKSIZE_VECTORADDCONSTANT>>>(d_in, scalar, N);
+	
+}
+
+template void  vectorAddConstant<float> (float  * __restrict__, const float , const int);
+template void  vectorAddConstant<double>(double * __restrict__, const double, const int);
