@@ -94,7 +94,7 @@ __global__ void generateLegendreFactorizedKernel(T * __restrict__ d_Leg, const T
 	const int tid_y = blockDim.y * blockIdx.y + threadIdx.y;
 	const int tid_z = blockDim.z * blockIdx.z + threadIdx.z;
 
-	if ((tid_x < N) && (tid_y < maxDegreeX) && (tid_z < maxDegreeY)) d_Leg[(tid_z * maxDegreeX + tid_y) * N + tid_x] = LegendreN(tid_y, d_X[tid_x]) * LegendreN(tid_z, d_Y[tid_x]);
+	if ((tid_x < N) && (tid_y < maxDegreeX) && (tid_z < maxDegreeY)) d_Leg[(tid_z * maxDegreeX + tid_y) * N + tid_x] = LegendreN(tid_z, d_X[tid_x]) * LegendreN(tid_y, d_Y[tid_x]);
 
 }
 	
