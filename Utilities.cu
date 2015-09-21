@@ -1,5 +1,3 @@
-#include <cublas_v2.h>
-
 #include <stdio.h>
 #include <assert.h>
 
@@ -7,6 +5,8 @@
 #include <cuda.h>
 
 #include <cusolverDn.h>
+#include <cublas_v2.h>
+#include <cufft.h>
 
 #include "Utilities.cuh"
 
@@ -130,6 +130,58 @@ inline void __cublasSafeCall(cublasStatus_t err, const char *file, const int lin
 }
 
 extern "C" void cublasSafeCall(cublasStatus_t err) { __cublasSafeCall(err, __FILE__, __LINE__); }
+
+/************************/
+/* CUFFT ERROR CHECKING */
+/************************/
+static const char *_cufftGetErrorEnum(cufftResult error)
+{
+    switch (error)
+    {
+        case CUFFT_SUCCESS:
+            return "CUFFT_SUCCESS";
+
+        case CUFFT_INVALID_PLAN:
+            return "CUFFT_INVALID_PLAN";
+
+        case CUFFT_ALLOC_FAILED:
+            return "CUFFT_ALLOC_FAILED";
+
+        case CUFFT_INVALID_TYPE:
+            return "CUFFT_INVALID_TYPE";
+
+        case CUFFT_INVALID_VALUE:
+            return "CUFFT_INVALID_VALUE";
+
+        case CUFFT_INTERNAL_ERROR:
+            return "CUFFT_INTERNAL_ERROR";
+
+        case CUFFT_EXEC_FAILED:
+            return "CUFFT_EXEC_FAILED";
+
+        case CUFFT_SETUP_FAILED:
+            return "CUFFT_SETUP_FAILED";
+
+        case CUFFT_INVALID_SIZE:
+            return "CUFFT_INVALID_SIZE";
+
+        case CUFFT_UNALIGNED_DATA:
+            return "CUFFT_UNALIGNED_DATA";
+    }
+
+    return "<unknown>";
+}
+
+// --- CUFFTSAFECALL
+inline void __cufftSafeCall(cufftResult err, const char *file, const int line)
+{
+    if( CUFFT_SUCCESS != err) {
+		fprintf(stderr, "CUFFT error in file '%s', line %d\n \nerror %d: %s\nterminating!\n",__FILE__, __LINE__,err, _cufftGetErrorEnum(err));
+		cudaDeviceReset(); assert(0);
+    }
+}
+
+extern "C" void cufftSafeCall(cufftResult err) { __cufftSafeCall(err, __FILE__, __LINE__); }
 
 /************************/
 /* REVERSE ARRAY KERNEL */
@@ -260,3 +312,69 @@ void vectorAddConstant(T * __restrict__ d_in, const T scalar, const int N) {
 
 template void  vectorAddConstant<float> (float  * __restrict__, const float , const int);
 template void  vectorAddConstant<double>(double * __restrict__, const double, const int);
+
+/***********************************/
+/* MULTIPLY A VECTOR BY A CONSTANT */
+/***********************************/
+#define BLOCKSIZE_VECTORMULCONSTANT	256
+
+template<class T>
+__global__ void vectorMulConstantKernel(T * __restrict__ d_in, const T scalar, const int N) {
+    
+	const int tid	= threadIdx.x + blockIdx.x*blockDim.x;
+    
+	if (tid < N) d_in[tid] *= scalar;
+
+}
+
+template<class T>
+void vectorMulConstant(T * __restrict__ d_in, const T scalar, const int N) {
+    
+	vectorMulConstantKernel<<<iDivUp(N, BLOCKSIZE_VECTORMULCONSTANT), BLOCKSIZE_VECTORMULCONSTANT>>>(d_in, scalar, N);
+	
+}
+
+template void  vectorMulConstant<float> (float  * __restrict__, const float , const int);
+template void  vectorMulConstant<double>(double * __restrict__, const double, const int);
+
+/*****************************************************/
+/* FUSED MULTIPLY ADD OPERATIONS FOR HOST AND DEVICE */
+/*****************************************************/
+template<class T>
+__host__ __device__ T fma2(T x, T y, T z) { return x * y + z; }
+
+template float  fma2<float >(float , float , float );
+template double fma2<double>(double, double, double);
+
+/*******************/
+/* MODULO FUNCTION */
+/*******************/
+__device__ int modulo(int val, int _mod)
+{
+	int P;
+	if(val > 0) { (!(_mod & (_mod - 1))? P = val&(_mod-1) : P = val%(_mod)); return P; }
+	else
+	{
+		(!(_mod & (_mod - 1))? P = (-val)&(_mod-1) : P = (-val)%(_mod));
+		if(P > 0) return _mod -P;
+		else return 0;
+	}
+}
+
+/***************************************/
+/* ATOMIC ADDITION FUNCTION ON DOUBLES */
+/***************************************/
+__device__ double atomicAdd(double* address, double val)
+{
+    unsigned long long int* address_as_ull =
+                              (unsigned long long int*)address;
+    register unsigned long long int old = *address_as_ull, assumed;
+    do {
+        assumed = old;
+        old = atomicCAS(address_as_ull, assumed,
+                        __double_as_longlong(val +
+                               __longlong_as_double(assumed)));
+    } while (assumed != old);
+    return __longlong_as_double(old);
+}
+
