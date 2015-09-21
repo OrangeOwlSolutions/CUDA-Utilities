@@ -2,6 +2,8 @@
 
 #include "Utilities.cuh"
 
+#define DEBUG
+
 /************/
 /* LINSPACE */
 /************/
