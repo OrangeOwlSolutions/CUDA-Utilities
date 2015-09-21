@@ -3,6 +3,7 @@
 
 #include <cusolverDn.h>
 #include <cublas_v2.h>
+#include <cufft.h>
 
 #include <thrust\pair.h>
 
@@ -10,6 +11,7 @@ extern "C" int iDivUp(int, int);
 extern "C" void gpuErrchk(cudaError_t);
 extern "C" void cusolveSafeCall(cusolverStatus_t);
 extern "C" void cublasSafeCall(cublasStatus_t);
+extern "C" void cufftSafeCall(cufftResult err);
 
 template <class T>
 void reverseArray(const T * __restrict__, T * __restrict__, const int, const T a = static_cast<T>(1));
@@ -22,6 +24,16 @@ void linearCombination(const T * __restrict__, const T * __restrict__, T * __res
 
 template<class T>
 void vectorAddConstant(T * __restrict__, const T, const int);
+
+template<class T>
+void vectorMulConstant(T * __restrict__, const T, const int);
+
+template<class T>
+__host__ __device__ T fma2(T, T, T);
+
+__device__ int modulo(int, int);
+
+__device__ double atomicAdd(double *, double);
 
 /**************************/
 /* TEMPLATE SHARED MEMORY */
