@@ -1,5 +1,10 @@
 #include "Utilities.cuh"
 #include "Polynomials.cuh"
+#include "Matlab_like.cuh"
+
+#include <thrust\pair.h>
+
+#define DEBUG
 
 #define pi 3.141592653589793238463
 
@@ -101,29 +106,43 @@ __global__ void generateLegendreFactorizedKernel(T * __restrict__ d_Leg, const T
 /********************************************************/
 /* FACTORIZED LEGENDRE POLYNOMIALS CALCULATION FUNCTION */
 /********************************************************/
-#define BLOCKSIZE_LEGENDRE_FACTORIZED_X		16
-#define BLOCKSIZE_LEGENDRE_FACTORIZED_Y		8
-#define BLOCKSIZE_LEGENDRE_FACTORIZED_Z		8
+#define BLOCKSIZE_LEGENDRE_FACTORIZED_X		8
+#define BLOCKSIZE_LEGENDRE_FACTORIZED_Y		4
+#define BLOCKSIZE_LEGENDRE_FACTORIZED_Z		4
 
 template <class T>
-T * generateLegendreFactorized(const T * __restrict__ d_X, const T * __restrict__ d_Y, const int maxDegreeX, const int maxDegreeY, const int N) {
+thrust::pair<thrust::pair<T *, T*>, T*> generateLegendreFactorized(const int maxDegreeX, const int maxDegreeY, const int M_x, const int M_y) {
 
+	// --- Generating the (csi, eta) grid
+	T *d_csi = linspace(-static_cast<T>(1), static_cast<T>(1), M_x);
+	T *d_eta = linspace(-static_cast<T>(1), static_cast<T>(1), M_y);
+
+	thrust::pair<T *, T *> d_CSI_ETA = meshgrid(d_csi, M_x, d_eta, M_y);
+	T *d_CSI = d_CSI_ETA.first;
+	T *d_ETA = d_CSI_ETA.second;
+
+	// --- Generating the Legendre polynomials
+	const int N = M_x * M_y;
+	
 	T *d_Leg;	gpuErrchk(cudaMalloc(&d_Leg, maxDegreeX * maxDegreeY * N * sizeof(T)));
 	
 	dim3 GridSize(iDivUp(N, BLOCKSIZE_LEGENDRE_FACTORIZED_X), iDivUp(maxDegreeX, BLOCKSIZE_LEGENDRE_FACTORIZED_Y), iDivUp(maxDegreeY, BLOCKSIZE_LEGENDRE_FACTORIZED_Z));
 	dim3 BlockSize(BLOCKSIZE_LEGENDRE_FACTORIZED_X, BLOCKSIZE_LEGENDRE_FACTORIZED_Y, BLOCKSIZE_LEGENDRE_FACTORIZED_Z);
-	generateLegendreFactorizedKernel<<<GridSize, BlockSize>>>(d_Leg, d_X, d_Y, maxDegreeX, maxDegreeY, N);
+	generateLegendreFactorizedKernel<<<GridSize, BlockSize>>>(d_Leg, d_CSI, d_ETA, maxDegreeX, maxDegreeY, N);
 #ifdef DEBUG
 	gpuErrchk(cudaPeekAtLastError());
 	gpuErrchk(cudaDeviceSynchronize());
 #endif
 
-	return d_Leg;
+	gpuErrchk(cudaFree(d_csi));
+	gpuErrchk(cudaFree(d_eta));
+
+	return thrust::make_pair(thrust::make_pair(d_CSI, d_ETA), d_Leg);
 
 }
 
-template float  *  generateLegendreFactorized<float> (const float  * __restrict__, const float  * __restrict__, const int, const int, const int);
-template double *  generateLegendreFactorized<double>(const double * __restrict__, const double * __restrict__, const int, const int, const int);
+template thrust::pair<thrust::pair<float  *, float *>, float *>  generateLegendreFactorized<float> (const int, const int, const int, const int);
+template thrust::pair<thrust::pair<double *, double*>, double*>  generateLegendreFactorized<double>(const int, const int, const int, const int);
 
 /************************/
 /* BINOMIAL COEFFICIENT */
@@ -319,13 +338,19 @@ __global__ void generateZernikepKernel(T * __restrict__ d_Zernike, const T * __r
 
 // --- Zernike polynomials with single index.
 template <class T>
-T * generateZernikep(const T * __restrict__ d_rho, const T * __restrict__ d_theta, const int maxDegree, const int N) {
+T * generateZernikep(const T * __restrict__ d_CSI, const T * __restrict__ d_ETA, const int maxDegree, const int M_x, const int M_y) {
 
+	thrust::pair<T *, T *> d_RHO_THETA = Cartesian2Polar(d_CSI, d_ETA, M_x * M_y, static_cast<T>(1) / sqrt(static_cast<T>(2)));
+	T *d_RHO	= d_RHO_THETA.first;
+	T *d_THETA  = d_RHO_THETA.second;
+
+	const int N = M_x * M_y;
+	
 	T *d_Zernike;	gpuErrchk(cudaMalloc(&d_Zernike, N * maxDegree * sizeof(T)));
 	
 	dim3 GridSize(iDivUp(N, BLOCKSIZE_ZERNIKE_X), iDivUp(maxDegree, BLOCKSIZE_ZERNIKE_Y));
 	dim3 BlockSize(BLOCKSIZE_ZERNIKE_X, BLOCKSIZE_ZERNIKE_Y);
-	generateZernikepKernel<<<GridSize, BlockSize>>>(d_Zernike, d_rho, d_theta, maxDegree, N);
+	generateZernikepKernel<<<GridSize, BlockSize>>>(d_Zernike, d_RHO, d_THETA, maxDegree, N);
 #ifdef DEBUG
 	gpuErrchk(cudaPeekAtLastError());
 	gpuErrchk(cudaDeviceSynchronize());
@@ -334,5 +359,5 @@ T * generateZernikep(const T * __restrict__ d_rho, const T * __restrict__ d_thet
 	return d_Zernike;
 }
 
-template float  * generateZernikep<float> (const float  * __restrict__ d_rho, const float  * __restrict__ d_theta, const int maxDegree, const int N);
-template double * generateZernikep<double>(const double * __restrict__ d_rho, const double * __restrict__ d_theta, const int maxDegree, const int N);
+template float  * generateZernikep<float> (const float  * __restrict__, const float  * __restrict__, const int, const int, const int);
+template double * generateZernikep<double>(const double * __restrict__, const double * __restrict__, const int, const int, const int);
