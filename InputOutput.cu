@@ -29,6 +29,22 @@ void saveGPUrealtxt(const T * d_in, const char *filename, const int M) {
 template void saveGPUrealtxt<float> (const float  *, const char *, const int);
 template void saveGPUrealtxt<double>(const double *, const char *, const int);
 
+/***********************************************/
+/* SAVE INDIVIDUAL REAL CPU MATRIX TO txt FILE */
+/***********************************************/
+template <class T>
+void saveCPUrealtxt(const T * h_in, const char *filename, const int M) {
+	
+	std::ofstream outfile;
+	outfile.open(filename);
+	for(int i = 0; i < M; i++) outfile << std::setprecision(prec_save) << h_in[i] << "\n"; 
+	outfile.close();
+
+}
+
+template void saveCPUrealtxt<float> (const float  *, const char *, const int);
+template void saveCPUrealtxt<double>(const double *, const char *, const int);
+
 /**************************************************/
 /* SAVE INDIVIDUAL COMPLEX GPU MATRIX TO txt FILE */
 /**************************************************/
@@ -41,7 +57,42 @@ void saveGPUcomplextxt(const T * d_in, const char *filename, const int M) {
 	
 	std::ofstream outfile;
 	outfile.open(filename);
-	for(int i = 0; i < M; i++) { outfile << std::setprecision(prec_save) << h_in[i].c.x << "\n"; outfile << std::setprecision(prec_save) << h_in[i].c.y << "\n";}
+	for(int i = 0; i < M; i++) { 
+		//printf("%f %f\n", h_in[i].c.x, h_in[i].c.y);
+		outfile << std::setprecision(prec_save) << h_in[i].c.x << "\n"; outfile << std::setprecision(prec_save) << h_in[i].c.y << "\n";
+	}
+	outfile.close();
+
+}
+
+void saveGPUcomplextxt(const float2 * d_in, const char *filename, const int M) {
+	
+	float2 *h_in	= (float2 *)malloc(M * sizeof(float2));
+	
+	gpuErrchk(cudaMemcpy(h_in, d_in, M * sizeof(float2), cudaMemcpyDeviceToHost));
+	
+	std::ofstream outfile;
+	outfile.open(filename);
+	for(int i = 0; i < M; i++) { 
+		//printf("%f %f\n", h_in[i].c.x, h_in[i].c.y);
+		outfile << std::setprecision(prec_save) << h_in[i].x << "\n"; outfile << std::setprecision(prec_save) << h_in[i].y << "\n";
+	}
+	outfile.close();
+
+}
+
+void saveGPUcomplextxt(const double2 * d_in, const char *filename, const int M) {
+	
+	double2 *h_in	= (double2 *)malloc(M * sizeof(double2));
+	
+	gpuErrchk(cudaMemcpy(h_in, d_in, M * sizeof(double2), cudaMemcpyDeviceToHost));
+	
+	std::ofstream outfile;
+	outfile.open(filename);
+	for(int i = 0; i < M; i++) { 
+		//printf("%f %f\n", h_in[i].c.x, h_in[i].c.y);
+		outfile << std::setprecision(prec_save) << h_in[i].x << "\n"; outfile << std::setprecision(prec_save) << h_in[i].y << "\n";
+	}
 	outfile.close();
 
 }
