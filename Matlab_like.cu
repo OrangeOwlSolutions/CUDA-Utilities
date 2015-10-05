@@ -15,8 +15,10 @@ T * linspace(const T a, const T b, const unsigned int N) {
 	T Dx = (b-a)/(T)(N-1);
    
 	thrust::device_ptr<T> d = thrust::device_pointer_cast(out_array); 	
-	thrust::transform(thrust::make_counting_iterator(a/Dx), thrust::make_counting_iterator((b+1.f)/Dx), thrust::make_constant_iterator(Dx), d, thrust::multiplies<T>());
+	thrust::transform(thrust::make_counting_iterator(a/Dx), thrust::make_counting_iterator((b+static_cast<T>(1))/Dx), thrust::make_constant_iterator(Dx), d, thrust::multiplies<T>());
 
+	gpuErrchk(cudaMemcpy(&out_array[N - 1], &b, sizeof(T), cudaMemcpyHostToDevice));
+	
 	return out_array;
 }
 
