@@ -35,49 +35,49 @@ extern "C" void gpuErrchk(cudaError_t ans) { gpuAssert((ans), __FILE__, __LINE__
 /**************************/
 /* CUSOLVE ERROR CHECKING */
 /**************************/
-//static const char *_cusolverGetErrorEnum(cusolverStatus_t error)
-//{
-//    switch (error)
-//    {
-//        case CUSOLVER_STATUS_SUCCESS:
-//            return "CUSOLVER_SUCCESS";
-//
-//        case CUSOLVER_STATUS_NOT_INITIALIZED:
-//            return "CUSOLVER_STATUS_NOT_INITIALIZED";
-//
-//        case CUSOLVER_STATUS_ALLOC_FAILED:
-//            return "CUSOLVER_STATUS_ALLOC_FAILED";
-//
-//        case CUSOLVER_STATUS_INVALID_VALUE:
-//            return "CUSOLVER_STATUS_INVALID_VALUE";
-//
-//        case CUSOLVER_STATUS_ARCH_MISMATCH:
-//            return "CUSOLVER_STATUS_ARCH_MISMATCH";
-//
-//        case CUSOLVER_STATUS_EXECUTION_FAILED:
-//            return "CUSOLVER_STATUS_EXECUTION_FAILED";
-//
-//        case CUSOLVER_STATUS_INTERNAL_ERROR:
-//            return "CUSOLVER_STATUS_INTERNAL_ERROR";
-//
-//        case CUSOLVER_STATUS_MATRIX_TYPE_NOT_SUPPORTED:
-//            return "CUSOLVER_STATUS_MATRIX_TYPE_NOT_SUPPORTED";
-//
-//    }
-//
-//    return "<unknown>";
-//}
-//
-//inline void __cusolveSafeCall(cusolverStatus_t err, const char *file, const int line)
-//{
-//    if(CUSOLVER_STATUS_SUCCESS != err) {
-//		fprintf(stderr, "CUSOLVE error in file '%s', line %Ndims\Nobjs %s\nerror %Ndims: %s\nterminating!\Nobjs",__FILE__, __LINE__,err, \
-//                                _cusolverGetErrorEnum(err)); \
-//		cudaDeviceReset(); assert(0); \
-//	}
-//}
-//
-//extern "C" void cusolveSafeCall(cusolverStatus_t err) { __cusolveSafeCall(err, __FILE__, __LINE__); }
+static const char *_cusolverGetErrorEnum(cusolverStatus_t error)
+{
+    switch (error)
+    {
+        case CUSOLVER_STATUS_SUCCESS:
+            return "CUSOLVER_SUCCESS";
+
+        case CUSOLVER_STATUS_NOT_INITIALIZED:
+            return "CUSOLVER_STATUS_NOT_INITIALIZED";
+
+        case CUSOLVER_STATUS_ALLOC_FAILED:
+            return "CUSOLVER_STATUS_ALLOC_FAILED";
+
+        case CUSOLVER_STATUS_INVALID_VALUE:
+            return "CUSOLVER_STATUS_INVALID_VALUE";
+
+        case CUSOLVER_STATUS_ARCH_MISMATCH:
+            return "CUSOLVER_STATUS_ARCH_MISMATCH";
+
+        case CUSOLVER_STATUS_EXECUTION_FAILED:
+            return "CUSOLVER_STATUS_EXECUTION_FAILED";
+
+        case CUSOLVER_STATUS_INTERNAL_ERROR:
+            return "CUSOLVER_STATUS_INTERNAL_ERROR";
+
+        case CUSOLVER_STATUS_MATRIX_TYPE_NOT_SUPPORTED:
+            return "CUSOLVER_STATUS_MATRIX_TYPE_NOT_SUPPORTED";
+
+    }
+
+    return "<unknown>";
+}
+
+inline void __cusolveSafeCall(cusolverStatus_t err, const char *file, const int line)
+{
+    if(CUSOLVER_STATUS_SUCCESS != err) {
+		fprintf(stderr, "CUSOLVE error in file '%s', line %Ndims\Nobjs %s\nerror %Ndims: %s\nterminating!\Nobjs",__FILE__, __LINE__,err, \
+                                _cusolverGetErrorEnum(err)); \
+		cudaDeviceReset(); assert(0); \
+	}
+}
+
+extern "C" void cusolveSafeCall(cusolverStatus_t err) { __cusolveSafeCall(err, __FILE__, __LINE__); }
 
 /*************************/
 /* CUBLAS ERROR CHECKING */
@@ -298,9 +298,9 @@ __global__ void Cartesian2PolarKernel(const T * __restrict__ d_x, const T * __re
 
 }
 
-/*************************************************/
-/* CARTESIAN TO POLAR COORDINATES TRANSFORMATION */
-/*************************************************/
+/*******************************************************/
+/* CARTESIAN TO POLAR COORDINATES TRANSFORMATION - GPU */
+/*******************************************************/
 template <class T>
 thrust::pair<T *,T *> Cartesian2Polar(const T * __restrict__ d_x, const T * __restrict__ d_y, const int N, const T a) {
 
@@ -318,6 +318,26 @@ thrust::pair<T *,T *> Cartesian2Polar(const T * __restrict__ d_x, const T * __re
 
 template thrust::pair<float  *, float  *>  Cartesian2Polar<float>  (const float  *, const float  *, const int, const float);
 template thrust::pair<double *, double *>  Cartesian2Polar<double> (const double *, const double *, const int, const double);
+
+/*******************************************************/
+/* CARTESIAN TO POLAR COORDINATES TRANSFORMATION - CPU */
+/*******************************************************/
+template <class T>
+thrust::pair<T *,T *> h_Cartesian2Polar(const T * __restrict__ h_x, const T * __restrict__ h_y, const int N, const T a) {
+
+	T *h_rho	= (T *)malloc(N * sizeof(T));
+	T *h_theta	= (T *)malloc(N * sizeof(T));
+
+	for (int i = 0; i < N; i++) {
+		h_rho[i]	= a * hypot(h_x[i], h_y[i]);
+		h_theta[i]	= atan2(h_y[i], h_x[i]);
+	}
+
+	return thrust::make_pair(h_rho, h_theta);
+}
+
+template thrust::pair<float  *, float  *>  h_Cartesian2Polar<float>  (const float  *, const float  *, const int, const float);
+template thrust::pair<double *, double *>  h_Cartesian2Polar<double> (const double *, const double *, const int, const double);
 
 /*******************************/
 /* LINEAR COMBINATION FUNCTION */
@@ -366,9 +386,9 @@ void vectorAddConstant(T * __restrict__ d_in, const T scalar, const int N) {
 template void  vectorAddConstant<float> (float  * __restrict__, const float , const int);
 template void  vectorAddConstant<double>(double * __restrict__, const double, const int);
 
-/***********************************/
-/* MULTIPLY A VECTOR BY A CONSTANT */
-/***********************************/
+/*****************************************/
+/* MULTIPLY A VECTOR BY A CONSTANT - GPU */
+/*****************************************/
 #define BLOCKSIZE_VECTORMULCONSTANT	256
 
 template<class T>
@@ -389,6 +409,19 @@ void vectorMulConstant(T * __restrict__ d_in, const T scalar, const int N) {
 
 template void  vectorMulConstant<float> (float  * __restrict__, const float , const int);
 template void  vectorMulConstant<double>(double * __restrict__, const double, const int);
+
+/*****************************************/
+/* MULTIPLY A VECTOR BY A CONSTANT - CPU */
+/*****************************************/
+template<class T>
+void h_vectorMulConstant(T * __restrict__ h_in, const T scalar, const int N) {
+    
+	for (int i = 0; i < N; i++) h_in[i] *= scalar;
+	
+}
+
+template void  h_vectorMulConstant<float> (float  * __restrict__, const float , const int);
+template void  h_vectorMulConstant<double>(double * __restrict__, const double, const int);
 
 /*****************************************************/
 /* FUSED MULTIPLY ADD OPERATIONS FOR HOST AND DEVICE */
