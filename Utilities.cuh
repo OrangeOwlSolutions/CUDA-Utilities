@@ -22,6 +22,9 @@ template <class T>
 thrust::pair<T *,T *> Cartesian2Polar(const T * __restrict__ d_x, const T * __restrict__ d_y, const int N, const T a = static_cast<T>(1));
 
 template <class T>
+thrust::pair<T *,T *> h_Cartesian2Polar(const T * __restrict__ d_x, const T * __restrict__ d_y, const int N, const T a = static_cast<T>(1));
+
+template <class T>
 void linearCombination(const T * __restrict__, const T * __restrict__, T * __restrict__, const int, const int, const cublasHandle_t);
 
 void linearCombination(const float * __restrict__, const float * __restrict__, float * __restrict__,
@@ -35,6 +38,9 @@ void vectorAddConstant(T * __restrict__, const T, const int);
 
 template<class T>
 void vectorMulConstant(T * __restrict__, const T, const int);
+
+template<class T>
+void h_vectorMulConstant(T * __restrict__, const T, const int);
 
 template<class T>
 __host__ __device__ T fma2(T, T, T);
