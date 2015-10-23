@@ -6,6 +6,8 @@
 /************/
 template <class T> T * linspace(const T, const T, const unsigned int);
 
+template <class T> T * h_linspace(const T, const T, const unsigned int);
+
 /************/
 /* MESHGRID */
 /************/
@@ -14,11 +16,17 @@ template <class T> T * linspace(const T, const T, const unsigned int);
 template <class T>
 thrust::pair<T *,T *> meshgrid(const T *, const unsigned int, const T *, const unsigned int);
 
+template <class T>
+thrust::pair<T *,T *> h_meshgrid(const T *, const unsigned int, const T *, const unsigned int);
+
 /*********/
 /* COLON */
 /*********/
 template <class T>
 T * colon(const T, const T, const T);
+
+template <class T>
+T * h_colon(const T, const T, const T);
 
 /*****************************/
 /* GENERATE SYMMETRIC POINTS */
