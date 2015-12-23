@@ -24,7 +24,7 @@ template <class T> inline __host__ __device__ T Legendre1(const T& x) { return x
 template <class T> inline __host__ __device__ T Legendre2(const T& x) { return ((static_cast<T>(3.0) * x * x) - static_cast<T>(1.0)) * static_cast<T>(0.5); }
 
 // --- N-th order
-template <class T> inline __host__ __device__ T LegendreN(unsigned int n, const T& x) {
+template <class T> __host__ __device__ T LegendreN(unsigned int n, const T& x) {
 	
 	if      (n == 0) { return Legendre0<T>(x); }
     else if (n == 1) { return Legendre1<T>(x); }
@@ -48,6 +48,9 @@ template <class T> inline __host__ __device__ T LegendreN(unsigned int n, const 
 
     return pn;
 }
+
+template __host__ __device__ float   LegendreN<float> (unsigned int, const float &);
+template __host__ __device__ double  LegendreN<double>(unsigned int, const double&);
 
 /*******************************************/
 /* LEGENDRE POLYNOMIALS CALCULATION KERNEL */
