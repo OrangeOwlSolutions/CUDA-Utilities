@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <assert.h>
+//#include <math.h>
 
 #include "cuda_runtime.h"
 #include <cuda.h>
 
-//#include <cusolverDn.h>
+#if __CUDA_ARCH__ >= 700
+#include <cusolverDn.h>
+#endif
 #include <cublas_v2.h>
 #include <cufft.h>
 
@@ -35,6 +38,7 @@ extern "C" void gpuErrchk(cudaError_t ans) { gpuAssert((ans), __FILE__, __LINE__
 /**************************/
 /* CUSOLVE ERROR CHECKING */
 /**************************/
+#if __CUDA_ARCH__ >= 700
 static const char *_cusolverGetErrorEnum(cusolverStatus_t error)
 {
     switch (error)
@@ -78,6 +82,7 @@ inline void __cusolveSafeCall(cusolverStatus_t err, const char *file, const int 
 }
 
 extern "C" void cusolveSafeCall(cusolverStatus_t err) { __cusolveSafeCall(err, __FILE__, __LINE__); }
+#endif
 
 /*************************/
 /* CUBLAS ERROR CHECKING */
@@ -254,15 +259,15 @@ __global__ void reverseArrayKernel(const T * __restrict__ d_in, T * __restrict__
 	const int offset		= blockDim.x * (blockIdx.x + 1);
 
 	// --- Load one element per thread from device memory and store it *in reversed order* into shared memory
-	if (tid < N) s_data[BLOCKSIZE_REVERSE - (id + 1)] = a * d_in[tid]; 
- 
+	if (tid < N) s_data[BLOCKSIZE_REVERSE - (id + 1)] = a * d_in[tid];
+
 	// --- Block until all threads in the block have written their data to shared memory
 	__syncthreads();
- 
+
 	// --- Write the data from shared memory in forward order
-	if ((N - offset + id) >= 0) d_out[N - offset + id] = s_data[threadIdx.x]; 
+	if ((N - offset + id) >= 0) d_out[N - offset + id] = s_data[threadIdx.x];
 }
- 
+
 /************************/
 /* REVERSE ARRAY KERNEL */
 /************************/
@@ -286,7 +291,7 @@ template void reverseArray<double> (const double * __restrict__, double * __rest
 #define BLOCKSIZE_CART2POL	256
 
 template <class T>
-__global__ void Cartesian2PolarKernel(const T * __restrict__ d_x, const T * __restrict__ d_y, T * __restrict__ d_rho, T * __restrict__ d_theta, 
+__global__ void Cartesian2PolarKernel(const T * __restrict__ d_x, const T * __restrict__ d_y, T * __restrict__ d_rho, T * __restrict__ d_theta,
 	                       const int N, const T a) {
 
 	const int tid = blockIdx.x * blockDim.x + threadIdx.x;
@@ -301,43 +306,43 @@ __global__ void Cartesian2PolarKernel(const T * __restrict__ d_x, const T * __re
 /*******************************************************/
 /* CARTESIAN TO POLAR COORDINATES TRANSFORMATION - GPU */
 /*******************************************************/
-template <class T>
-thrust::pair<T *,T *> Cartesian2Polar(const T * __restrict__ d_x, const T * __restrict__ d_y, const int N, const T a) {
-
-	T *d_rho;	gpuErrchk(cudaMalloc((void**)&d_rho,   N * sizeof(T)));
-	T *d_theta; gpuErrchk(cudaMalloc((void**)&d_theta, N * sizeof(T)));
-
-	Cartesian2PolarKernel<<<iDivUp(N, BLOCKSIZE_CART2POL), BLOCKSIZE_CART2POL>>>(d_x, d_y, d_rho, d_theta, N, a);
-#ifdef DEBUG
-	gpuErrchk(cudaPeekAtLastError());
-	gpuErrchk(cudaDeviceSynchronize());
-#endif
-
-	return thrust::make_pair(d_rho, d_theta);
-}
-
-template thrust::pair<float  *, float  *>  Cartesian2Polar<float>  (const float  *, const float  *, const int, const float);
-template thrust::pair<double *, double *>  Cartesian2Polar<double> (const double *, const double *, const int, const double);
+//template <class T>
+//thrust::pair<T *,T *> Cartesian2Polar(const T * __restrict__ d_x, const T * __restrict__ d_y, const int N, const T a) {
+//
+//	T *d_rho;	gpuErrchk(cudaMalloc((void**)&d_rho,   N * sizeof(T)));
+//	T *d_theta; gpuErrchk(cudaMalloc((void**)&d_theta, N * sizeof(T)));
+//
+//	Cartesian2PolarKernel<<<iDivUp(N, BLOCKSIZE_CART2POL), BLOCKSIZE_CART2POL>>>(d_x, d_y, d_rho, d_theta, N, a);
+//#ifdef DEBUG
+//	gpuErrchk(cudaPeekAtLastError());
+//	gpuErrchk(cudaDeviceSynchronize());
+//#endif
+//
+//	return thrust::make_pair(d_rho, d_theta);
+//}
+//
+//template thrust::pair<float  *, float  *>  Cartesian2Polar<float>  (const float  *, const float  *, const int, const float);
+//template thrust::pair<double *, double *>  Cartesian2Polar<double> (const double *, const double *, const int, const double);
 
 /*******************************************************/
 /* CARTESIAN TO POLAR COORDINATES TRANSFORMATION - CPU */
 /*******************************************************/
-template <class T>
-thrust::pair<T *,T *> h_Cartesian2Polar(const T * __restrict__ h_x, const T * __restrict__ h_y, const int N, const T a) {
-
-	T *h_rho	= (T *)malloc(N * sizeof(T));
-	T *h_theta	= (T *)malloc(N * sizeof(T));
-
-	for (int i = 0; i < N; i++) {
-		h_rho[i]	= a * hypot(h_x[i], h_y[i]);
-		h_theta[i]	= atan2(h_y[i], h_x[i]);
-	}
-
-	return thrust::make_pair(h_rho, h_theta);
-}
-
-template thrust::pair<float  *, float  *>  h_Cartesian2Polar<float>  (const float  *, const float  *, const int, const float);
-template thrust::pair<double *, double *>  h_Cartesian2Polar<double> (const double *, const double *, const int, const double);
+//template <class T>
+//thrust::pair<T *,T *> h_Cartesian2Polar(const T * __restrict__ h_x, const T * __restrict__ h_y, const int N, const T a) {
+//
+//	T *h_rho	= (T *)malloc(N * sizeof(T));
+//	T *h_theta	= (T *)malloc(N * sizeof(T));
+//
+//	for (int i = 0; i < N; i++) {
+//		h_rho[i]	= a * hypot(h_x[i], h_y[i]);
+//		h_theta[i]	= atan2(h_y[i], h_x[i]);
+//	}
+//
+//	return thrust::make_pair(h_rho, h_theta);
+//}
+//
+//template thrust::pair<float  *, float  *>  h_Cartesian2Polar<float>  (const float  *, const float  *, const int, const float);
+//template thrust::pair<double *, double *>  h_Cartesian2Polar<double> (const double *, const double *, const int, const double);
 
 /*******************************/
 /* LINEAR COMBINATION FUNCTION */
@@ -347,7 +352,7 @@ void linearCombination(const float * __restrict__ d_coeff, const float * __restr
 
     float alpha = 1.f;
     float beta  = 0.f;
-    cublasSafeCall(cublasSgemv(handle, CUBLAS_OP_N, N_sampling_points, N_basis_functions, &alpha, d_basis_functions_real, N_sampling_points, 
+    cublasSafeCall(cublasSgemv(handle, CUBLAS_OP_N, N_sampling_points, N_basis_functions, &alpha, d_basis_functions_real, N_sampling_points,
                                d_coeff, 1, &beta, d_linear_combination, 1));
 
 }
@@ -357,7 +362,7 @@ void linearCombination(const double * __restrict__ d_coeff, const double * __res
 
     double alpha = 1.;
     double beta  = 0.;
-    cublasSafeCall(cublasDgemv(handle, CUBLAS_OP_N, N_sampling_points, N_basis_functions, &alpha, d_basis_functions_real, N_sampling_points, 
+    cublasSafeCall(cublasDgemv(handle, CUBLAS_OP_N, N_sampling_points, N_basis_functions, &alpha, d_basis_functions_real, N_sampling_points,
                                d_coeff, 1, &beta, d_linear_combination, 1));
 
 }
@@ -369,18 +374,18 @@ void linearCombination(const double * __restrict__ d_coeff, const double * __res
 
 template<class T>
 __global__ void vectorAddConstantKernel(T * __restrict__ d_in, const T scalar, const int N) {
-    
+
 	const int tid	= threadIdx.x + blockIdx.x*blockDim.x;
-    
+
 	if (tid < N) d_in[tid] += scalar;
 
 }
 
 template<class T>
 void vectorAddConstant(T * __restrict__ d_in, const T scalar, const int N) {
-    
+
 	vectorAddConstantKernel<<<iDivUp(N, BLOCKSIZE_VECTORADDCONSTANT), BLOCKSIZE_VECTORADDCONSTANT>>>(d_in, scalar, N);
-	
+
 }
 
 template void  vectorAddConstant<float> (float  * __restrict__, const float , const int);
@@ -393,18 +398,18 @@ template void  vectorAddConstant<double>(double * __restrict__, const double, co
 
 template<class T>
 __global__ void vectorMulConstantKernel(T * __restrict__ d_in, const T scalar, const int N) {
-    
+
 	const int tid	= threadIdx.x + blockIdx.x*blockDim.x;
-    
+
 	if (tid < N) d_in[tid] *= scalar;
 
 }
 
 template<class T>
 void vectorMulConstant(T * __restrict__ d_in, const T scalar, const int N) {
-    
+
 	vectorMulConstantKernel<<<iDivUp(N, BLOCKSIZE_VECTORMULCONSTANT), BLOCKSIZE_VECTORMULCONSTANT>>>(d_in, scalar, N);
-	
+
 }
 
 template void  vectorMulConstant<float> (float  * __restrict__, const float , const int);
@@ -415,9 +420,9 @@ template void  vectorMulConstant<double>(double * __restrict__, const double, co
 /*****************************************/
 template<class T>
 void h_vectorMulConstant(T * __restrict__ h_in, const T scalar, const int N) {
-    
+
 	for (int i = 0; i < N; i++) h_in[i] *= scalar;
-	
+
 }
 
 template void  h_vectorMulConstant<float> (float  * __restrict__, const float , const int);
