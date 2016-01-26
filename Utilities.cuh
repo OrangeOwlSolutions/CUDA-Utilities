@@ -1,16 +1,20 @@
 #ifndef UTILITIES_CUH
 #define UTILITIES_CUH
 
+#if __CUDA_ARCH__ >= 700
 #include <cusolverDn.h>
+#endif
 #include <cublas_v2.h>
 #include <cusparse_v2.h>
 #include <cufft.h>
 
-#include <thrust/pair.h>
+//#include <thrust/pair.h>
 
 extern "C" int iDivUp(int, int);
 extern "C" void gpuErrchk(cudaError_t);
+#if __CUDA_ARCH__ >= 700
 extern "C" void cusolveSafeCall(cusolverStatus_t);
+#endif
 extern "C" void cublasSafeCall(cublasStatus_t);
 extern "C" void cufftSafeCall(cufftResult err);
 extern "C" void cusparseSafeCall(cusparseStatus_t err);
@@ -18,11 +22,11 @@ extern "C" void cusparseSafeCall(cusparseStatus_t err);
 template <class T>
 void reverseArray(const T * __restrict__, T * __restrict__, const int, const T a = static_cast<T>(1));
 
-template <class T>
-thrust::pair<T *,T *> Cartesian2Polar(const T * __restrict__ d_x, const T * __restrict__ d_y, const int N, const T a = static_cast<T>(1));
-
-template <class T>
-thrust::pair<T *,T *> h_Cartesian2Polar(const T * __restrict__ d_x, const T * __restrict__ d_y, const int N, const T a = static_cast<T>(1));
+//template <class T>
+//thrust::pair<T *,T *> Cartesian2Polar(const T * __restrict__ d_x, const T * __restrict__ d_y, const int N, const T a = static_cast<T>(1));
+//
+//template <class T>
+//thrust::pair<T *,T *> h_Cartesian2Polar(const T * __restrict__ d_x, const T * __restrict__ d_y, const int N, const T a = static_cast<T>(1));
 
 template <class T>
 void linearCombination(const T * __restrict__, const T * __restrict__, T * __restrict__, const int, const int, const cublasHandle_t);
