@@ -1,5 +1,5 @@
-#ifndef INPUTOUTPUT_H
-#define INPUTOUTPUT_H
+#ifndef INPUTOUTPUT_CUH
+#define INPUTOUTPUT_CUH
 
 template <class T>
 void saveGPUrealtxt(const T *, const char *, const int);
