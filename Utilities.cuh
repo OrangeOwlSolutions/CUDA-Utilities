@@ -52,6 +52,7 @@ __host__ __device__ T fma2(T, T, T);
 __device__ int modulo(int, int);
 
 __device__ double atomicAdd(double *, double);
+__device__ float  atomicMin(float *, float);
 
 /**************************/
 /* TEMPLATE SHARED MEMORY */
