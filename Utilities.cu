@@ -469,3 +469,19 @@ __device__ double atomicAdd(double* address, double val)
     return __longlong_as_double(old);
 }
 
+/*********************************/
+/* ATOMIC MIN FUNCTION ON FLOATS */
+/*********************************/
+__device__ float atomicMin(float* address, float val)
+{
+	int* address_as_i = (int*)address;
+	int old = *address_as_i, assumed;
+	do {
+		assumed = old;
+		old = ::atomicCAS(address_as_i, assumed,
+			__float_as_int(::fminf(val, __int_as_float(assumed))));
+	} while (assumed != old);
+	return __int_as_float(old);
+}
+
+
