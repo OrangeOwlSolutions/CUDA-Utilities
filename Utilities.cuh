@@ -1,7 +1,7 @@
 #ifndef UTILITIES_CUH
 #define UTILITIES_CUH
 
-#if __CUDA_ARCH__ >= 700
+#if defined(__CUDACC__) && (CUDA_VERSION >= 7000)
 #include <cusolverDn.h>
 #endif
 #include <cublas_v2.h>
