@@ -345,6 +345,26 @@ __global__ void Cartesian2PolarKernel(const T * __restrict__ d_x, const T * __re
 //template thrust::pair<double *, double *>  h_Cartesian2Polar<double> (const double *, const double *, const int, const double);
 
 /*******************************/
+/* COMPUTE L2 NORM OF A VECTOR */
+/*******************************/
+template<class T>
+T h_l2_norm(T *v1, T *v2, const int N) {
+
+	T norm = (T)0;
+
+	for (int i = 0; i < N; ++i)
+	{
+		T d = v1[i] - v2[i];
+		norm = norm + d * d;
+	}
+
+	return sqrt(norm);
+}
+
+template float  h_l2_norm<float> (float  *, float  *, const int);
+template double h_l2_norm<double>(double *, double *, const int);
+
+/*******************************/
 /* LINEAR COMBINATION FUNCTION */
 /*******************************/
 void linearCombination(const float * __restrict__ d_coeff, const float * __restrict__ d_basis_functions_real, float * __restrict__ d_linear_combination,
