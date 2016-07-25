@@ -49,7 +49,11 @@ void loadCPUrealtxt(T * __restrict h_out, const char *filename, const int M) {
 
 	std::ifstream infile;
 	infile.open(filename);
-	for (int i = 0; i < M; i++) infile >> h_out[i]; 
+	for (int i = 0; i < M; i++) {
+		double temp;
+		infile >> temp;
+		h_out[i] = (T)temp;
+	}
 
 	infile.close();
 
