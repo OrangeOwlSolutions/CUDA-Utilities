@@ -1,8 +1,24 @@
-#ifndef PRECONDCONJUGATEGRADIENTSPARSE_CUH
-#define PRECONDCONJUGATEGRADIENTSPARSE_CUH
+#include "cublas_v2.h"
 
-template<class T>
-void precondConjugateGradientSparse(const int * __restrict__, const int, const int * __restrict__, const T * __restrict__, const int,
-	T * __restrict__, const int, T * __restrict__, int &);
+/**************/
+/* CUBLASTDOT */
+/**************/
+cublasStatus_t cublasTdot(cublasHandle_t handle, int n, const float *x, int incx, const float *y, int incy, float *result) {
+	return cublasSdot(handle, n, x, incx, y, incy, result);
+}
 
-#endif
+cublasStatus_t cublasTdot(cublasHandle_t handle, int n, const double *x, int incx, const double *y, int incy, double *result) {
+	return cublasDdot(handle, n, x, incx, y, incy, result);
+}
+
+/***************/
+/* CUBLASTAXPY */
+/***************/
+cublasStatus_t cublasTaxpy(cublasHandle_t handle, int n, const float *alpha, const float *x, int incx, float *y, int incy) {
+	return cublasSaxpy(handle, n, alpha, x, incx, y, incy);
+}
+
+cublasStatus_t cublasTaxpy(cublasHandle_t handle, int n, const double *alpha, const double *x, int incx, double *y, int incy) {
+	return cublasDaxpy(handle, n, alpha, x, incx, y, incy);
+}
+
