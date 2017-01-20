@@ -12,7 +12,7 @@
 
 extern "C" int iDivUp(int, int);
 extern "C" void gpuErrchk(cudaError_t);
-#if __CUDA_ARCH__ >= 700
+#if __CUDACC_VER__ >= 80000
 extern "C" void cusolveSafeCall(cusolverStatus_t);
 #endif
 extern "C" void cublasSafeCall(cublasStatus_t);
