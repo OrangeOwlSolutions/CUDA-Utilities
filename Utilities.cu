@@ -38,7 +38,7 @@ extern "C" void gpuErrchk(cudaError_t ans) { gpuAssert((ans), __FILE__, __LINE__
 /**************************/
 /* CUSOLVE ERROR CHECKING */
 /**************************/
-#if __CUDA_ARCH__ >= 700
+#if (__CUDACC_VER__ >= 80000)
 static const char *_cusolverGetErrorEnum(cusolverStatus_t error)
 {
 	switch (error)
