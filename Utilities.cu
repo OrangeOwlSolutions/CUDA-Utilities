@@ -475,7 +475,8 @@ __device__ int modulo(int val, int _mod)
 /***************************************/
 /* ATOMIC ADDITION FUNCTION ON DOUBLES */
 /***************************************/
-#if defined(__CUDACC__) && (CUDA_VERSION < 8000)
+#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600
+#else
 __device__ double atomicAdd(double* address, double val)
 {
 	unsigned long long int* address_as_ull =
