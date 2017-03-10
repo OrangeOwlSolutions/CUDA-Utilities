@@ -10,7 +10,8 @@
 
 //#include <thrust/pair.h>
 
-extern "C" int iDivUp(int, int);
+//extern "C" int iDivUp(int, int);
+__host__ __device__ int iDivUp(int, int);
 extern "C" void gpuErrchk(cudaError_t);
 #if __CUDACC_VER__ >= 80000
 extern "C" void cusolveSafeCall(cusolverStatus_t);
