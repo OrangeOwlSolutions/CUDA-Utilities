@@ -18,7 +18,8 @@
 /*******************/
 /* iDivUp FUNCTION */
 /*******************/
-extern "C" int iDivUp(int a, int b){ return ((a % b) != 0) ? (a / b + 1) : (a / b); }
+//extern "C" int iDivUp(int a, int b){ return ((a % b) != 0) ? (a / b + 1) : (a / b); }
+__host__ __device__ int iDivUp(int a, int b){ return ((a % b) != 0) ? (a / b + 1) : (a / b); }
 
 /********************/
 /* CUDA ERROR CHECK */
