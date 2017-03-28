@@ -1,4 +1,4 @@
-    CUDA Utilities - High performance CPUs and GPUs computing library.
+    CUDA Utilities - Utilities for high performance CPUs/C/C++ and GPUs/CUDA computing library.
     
     Copyright (C) 2012-2017 Orange Owl Solutions.  
 
