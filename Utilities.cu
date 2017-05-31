@@ -5,7 +5,7 @@
 #include "cuda_runtime.h"
 #include <cuda.h>
 
-#if defined(__CUDACC__) && (CUDA_VERSION >= 7000)
+#if defined(__CUDACC__) && (CUDA_VERSION >= 70000)
 #include <cusolverDn.h>
 #endif
 #include <cublas_v2.h>
@@ -39,7 +39,7 @@ extern "C" void gpuErrchk(cudaError_t ans) { gpuAssert((ans), __FILE__, __LINE__
 /**************************/
 /* CUSOLVE ERROR CHECKING */
 /**************************/
-#if (__CUDACC_VER__ >= 80000)
+#if (__CUDACC_VER__ >= 70000)
 static const char *_cusolverGetErrorEnum(cusolverStatus_t error)
 {
 	switch (error)
