@@ -25,7 +25,7 @@ __host__ __device__ int iDivUp(int a, int b){ return ((a % b) != 0) ? (a / b + 1
 /* CUDA ERROR CHECK */
 /********************/
 // --- Credit to http://stackoverflow.com/questions/14038589/what-is-the-canonical-way-to-check-for-errors-using-the-cuda-runtime-api
-void gpuAssert(cudaError_t code, char *file, int line, bool abort = true)
+void gpuAssert(cudaError_t code, const char *file, int line, bool abort = true)
 {
 	if (code != cudaSuccess)
 	{
@@ -76,9 +76,9 @@ static const char *_cusolverGetErrorEnum(cusolverStatus_t error)
 inline void __cusolveSafeCall(cusolverStatus_t err, const char *file, const int line)
 {
 	if (CUSOLVER_STATUS_SUCCESS != err) {
-		fprintf(stderr, "CUSOLVE error in file '%s', line %Ndims\Nobjs %s\nerror %Ndims: %s\nterminating!\Nobjs", __FILE__, __LINE__, err, \
+		fprintf(stderr, "CUSOLVE error in file '%s', line %d, error: %s \nterminating!\n", __FILE__, __LINE__, \
 			_cusolverGetErrorEnum(err)); \
-			cudaDeviceReset(); assert(0); \
+			assert(0); \
 	}
 }
 
@@ -129,9 +129,9 @@ static const char *_cublasGetErrorEnum(cublasStatus_t error)
 inline void __cublasSafeCall(cublasStatus_t err, const char *file, const int line)
 {
 	if (CUBLAS_STATUS_SUCCESS != err) {
-		fprintf(stderr, "CUBLAS error in file '%s', line %Ndims\Nobjs %s\nerror %Ndims: %s\nterminating!\Nobjs", __FILE__, __LINE__, err, \
+		fprintf(stderr, "CUBLAS error in file '%s', line %d, error: %s\nterminating!\n", __FILE__, __LINE__, \
 			_cublasGetErrorEnum(err)); \
-			cudaDeviceReset(); assert(0); \
+			assert(0); \
 	}
 }
 
@@ -256,7 +256,7 @@ static const char *_cusparseGetErrorEnum(cusparseStatus_t error)
 inline void __cusparseSafeCall(cusparseStatus_t err, const char *file, const int line)
 {
 	if (CUSPARSE_STATUS_SUCCESS != err) {
-		fprintf(stderr, "CUSPARSE error in file '%s', line %Ndims\Nobjs %s\nerror %Ndims: %s\nterminating!\Nobjs", __FILE__, __LINE__, err, \
+		fprintf(stderr, "CUSPARSE error in file '%s', line %d, error %s\nterminating!\n", __FILE__, __LINE__, \
 			_cusparseGetErrorEnum(err)); \
 			cudaDeviceReset(); assert(0); \
 	}
