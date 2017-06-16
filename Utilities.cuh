@@ -1,9 +1,7 @@
 #ifndef UTILITIES_CUH
 #define UTILITIES_CUH
 
-#if defined(__CUDACC__) && (CUDA_VERSION >= 7000)
 #include <cusolverDn.h>
-#endif
 #include <cublas_v2.h>
 #include <cusparse_v2.h>
 #include <cufft.h>
@@ -13,9 +11,7 @@
 //extern "C" int iDivUp(int, int);
 __host__ __device__ int iDivUp(int, int);
 extern "C" void gpuErrchk(cudaError_t);
-#if __CUDACC_VER__ >= 80000
 extern "C" void cusolveSafeCall(cusolverStatus_t);
-#endif
 extern "C" void cublasSafeCall(cublasStatus_t);
 extern "C" void cufftSafeCall(cufftResult err);
 extern "C" void cusparseSafeCall(cusparseStatus_t err);
@@ -29,9 +25,9 @@ void reverseArray(const T * __restrict__, T * __restrict__, const int, const T a
 //template <class T>
 //thrust::pair<T *,T *> h_Cartesian2Polar(const T * __restrict__ d_x, const T * __restrict__ d_y, const int N, const T a = static_cast<T>(1));
 
-template<class T> 
+template<class T>
 T h_l2_norm(T *v1, T *v2, const int N);
-	
+
 template <class T>
 void linearCombination(const T * __restrict__, const T * __restrict__, T * __restrict__, const int, const int, const cublasHandle_t);
 
