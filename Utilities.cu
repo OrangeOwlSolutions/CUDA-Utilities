@@ -258,7 +258,7 @@ inline void __cusparseSafeCall(cusparseStatus_t err, const char *file, const int
 	if (CUSPARSE_STATUS_SUCCESS != err) {
 		fprintf(stderr, "CUSPARSE error in file '%s', line %d, error %s\nterminating!\n", __FILE__, __LINE__, \
 			_cusparseGetErrorEnum(err)); \
-			cudaDeviceReset(); assert(0); \
+			assert(0); \
 	}
 }
 
