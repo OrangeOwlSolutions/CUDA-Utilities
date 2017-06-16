@@ -5,9 +5,7 @@
 #include "cuda_runtime.h"
 #include <cuda.h>
 
-#if defined(__CUDACC__) && (CUDA_VERSION >= 70000)
 #include <cusolverDn.h>
-#endif
 #include <cublas_v2.h>
 #include <cufft.h>
 
