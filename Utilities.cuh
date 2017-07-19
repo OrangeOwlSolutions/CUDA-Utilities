@@ -54,6 +54,10 @@ __device__ int modulo(int, int);
 __device__ double atomicAdd(double *, double);
 __device__ float  atomicMin(float *, float);
 
+double deg2rad(double);
+
+void cudaMemoryUsage();
+	
 /**************************/
 /* TEMPLATE SHARED MEMORY */
 /**************************/
