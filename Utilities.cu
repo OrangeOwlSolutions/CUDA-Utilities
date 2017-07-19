@@ -13,6 +13,8 @@
 
 #define DEBUG
 
+#define PI_R         3.14159265358979323846f
+
 /*******************/
 /* iDivUp FUNCTION */
 /*******************/
@@ -141,69 +143,69 @@ extern "C" void cublasSafeCall(cublasStatus_t err) { __cublasSafeCall(err, __FIL
 // See http://stackoverflow.com/questions/16267149/cufft-error-handling
 static const char *_cudaGetErrorEnum(cufftResult error)
 {
-    switch (error)
-    {
-        case CUFFT_SUCCESS:
-            return "CUFFT_SUCCESS - The cuFFT operation was successful";
+	switch (error)
+	{
+	case CUFFT_SUCCESS:
+		return "CUFFT_SUCCESS - The cuFFT operation was successful";
 
-        case CUFFT_INVALID_PLAN:
-            return "CUFFT_INVALID_PLAN - cuFFT was passed an invalid plan handle";
+	case CUFFT_INVALID_PLAN:
+		return "CUFFT_INVALID_PLAN - cuFFT was passed an invalid plan handle";
 
-        case CUFFT_ALLOC_FAILED:
-            return "CUFFT_ALLOC_FAILED - cuFFT failed to allocate GPU or CPU memory";
+	case CUFFT_ALLOC_FAILED:
+		return "CUFFT_ALLOC_FAILED - cuFFT failed to allocate GPU or CPU memory";
 
-        case CUFFT_INVALID_TYPE:
-            return "CUFFT_INVALID_TYPE - No longer used";
+	case CUFFT_INVALID_TYPE:
+		return "CUFFT_INVALID_TYPE - No longer used";
 
-        case CUFFT_INVALID_VALUE:
-            return "CUFFT_INVALID_VALUE - User specified an invalid pointer or parameter";
+	case CUFFT_INVALID_VALUE:
+		return "CUFFT_INVALID_VALUE - User specified an invalid pointer or parameter";
 
-        case CUFFT_INTERNAL_ERROR:
-            return "CUFFT_INTERNAL_ERROR - Driver or internal cuFFT library error";
+	case CUFFT_INTERNAL_ERROR:
+		return "CUFFT_INTERNAL_ERROR - Driver or internal cuFFT library error";
 
-        case CUFFT_EXEC_FAILED:
-            return "CUFFT_EXEC_FAILED - Failed to execute an FFT on the GPU";
+	case CUFFT_EXEC_FAILED:
+		return "CUFFT_EXEC_FAILED - Failed to execute an FFT on the GPU";
 
-        case CUFFT_SETUP_FAILED:
-            return "CUFFT_SETUP_FAILED - The cuFFT library failed to initialize";
+	case CUFFT_SETUP_FAILED:
+		return "CUFFT_SETUP_FAILED - The cuFFT library failed to initialize";
 
-        case CUFFT_INVALID_SIZE:
-            return "CUFFT_INVALID_SIZE - User specified an invalid transform size";
+	case CUFFT_INVALID_SIZE:
+		return "CUFFT_INVALID_SIZE - User specified an invalid transform size";
 
-        case CUFFT_UNALIGNED_DATA:
-            return "CUFFT_UNALIGNED_DATA - No longer used";
+	case CUFFT_UNALIGNED_DATA:
+		return "CUFFT_UNALIGNED_DATA - No longer used";
 
-        case CUFFT_INCOMPLETE_PARAMETER_LIST:
-            return "CUFFT_INCOMPLETE_PARAMETER_LIST - Missing parameters in call";
+	case CUFFT_INCOMPLETE_PARAMETER_LIST:
+		return "CUFFT_INCOMPLETE_PARAMETER_LIST - Missing parameters in call";
 
-        case CUFFT_INVALID_DEVICE:
-            return "CUFFT_INVALID_DEVICE - Execution of a plan was on different GPU than plan creation";
+	case CUFFT_INVALID_DEVICE:
+		return "CUFFT_INVALID_DEVICE - Execution of a plan was on different GPU than plan creation";
 
-        case CUFFT_PARSE_ERROR:
-            return "CUFFT_PARSE_ERROR - Internal plan database error";
+	case CUFFT_PARSE_ERROR:
+		return "CUFFT_PARSE_ERROR - Internal plan database error";
 
-        case CUFFT_NO_WORKSPACE:
-            return "CUFFT_NO_WORKSPACE - No workspace has been provided prior to plan execution";
+	case CUFFT_NO_WORKSPACE:
+		return "CUFFT_NO_WORKSPACE - No workspace has been provided prior to plan execution";
 
-        case CUFFT_NOT_IMPLEMENTED:
-            return "CUFFT_NOT_IMPLEMENTED - Function does not implement functionality for parameters given";
+	case CUFFT_NOT_IMPLEMENTED:
+		return "CUFFT_NOT_IMPLEMENTED - Function does not implement functionality for parameters given";
 
-        case CUFFT_LICENSE_ERROR:
-            return "CUFFT_LICENSE_ERROR - Used in previous versions";
+	case CUFFT_LICENSE_ERROR:
+		return "CUFFT_LICENSE_ERROR - Used in previous versions";
 
-        case CUFFT_NOT_SUPPORTED:
-            return "CUFFT_NOT_SUPPORTED - Operation is not supported for parameters given";
-    }
+	case CUFFT_NOT_SUPPORTED:
+		return "CUFFT_NOT_SUPPORTED - Operation is not supported for parameters given";
+	}
 
-    return "<unknown>";
+	return "<unknown>";
 }
 
 // --- CUFFTSAFECALL
-inline void cufftAssert(cufftResult err, const char *file, const int line, bool abort=true)
+inline void cufftAssert(cufftResult err, const char *file, const int line, bool abort = true)
 {
-	if( CUFFT_SUCCESS != err) {
+	if (CUFFT_SUCCESS != err) {
 		fprintf(stderr, "CUFFTassert: Error nr. %d - %s %s %d\n", err, _cudaGetErrorEnum(err), __FILE__, __LINE__);
-        if (abort) exit(err);
+		if (abort) exit(err);
 	}
 }
 
@@ -382,7 +384,7 @@ T h_l2_norm(T *v1, T *v2, const int N) {
 	return sqrt(norm);
 }
 
-template float  h_l2_norm<float> (float  *, float  *, const int);
+template float  h_l2_norm<float>(float  *, float  *, const int);
 template double h_l2_norm<double>(double *, double *, const int);
 
 /*******************************/
@@ -528,4 +530,25 @@ __device__ float atomicMin(float* address, float val)
 	return __int_as_float(old);
 }
 
+/*********************/
+/* DEGREE TO RADIANS */
+/*********************/
+double deg2rad(double deg) { return deg*PI_R / 180; }
 
+/*********************/
+/* CUDA MEMORY USAGE */
+/*********************/
+void cudaMemoryUsage() {
+
+	size_t free_byte;
+	size_t total_byte;
+
+	gpuErrchk(cudaMemGetInfo(&free_byte, &total_byte));
+
+	double free_db = (double)free_byte;
+	double total_db = (double)total_byte;
+	double used_db = total_db - free_db;
+
+	printf("GPU memory: used = %f, free = %f MB, total available = %f MB\n", used_db / 1024.0 / 1024.0, free_db / 1024.0 / 1024.0, total_db / 1024.0 / 1024.0);
+
+}
