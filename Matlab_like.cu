@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include <thrust/device_vector.h>
 #include <thrust/pair.h>
 #include <thrust/sequence.h>
@@ -51,6 +53,14 @@ T * h_linspace(const T a, const T b, const unsigned int N) {
 
 template float  * h_linspace<float>(const float  a, const float  b, const unsigned int N);
 template double * h_linspace<double>(const double a, const double b, const unsigned int N);
+
+/***************/
+/* ZEROS - CPU */
+/***************/
+template <class T> T * h_zeros(const int M, const int N) { T *out_array = (T *)calloc(M * N, sizeof(T)); return out_array;  }
+
+template float  * h_zeros<float> (const int M, const int N);
+template double * h_zeros<double>(const int M, const int N);
 
 /*******************/
 /* MESHGRID KERNEL */

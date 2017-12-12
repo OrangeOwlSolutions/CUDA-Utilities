@@ -8,6 +8,11 @@ template <class T> T * d_linspace(const T, const T, const unsigned int);
 
 template <class T> T * h_linspace(const T, const T, const unsigned int);
 
+/*********/
+/* ZEROS */
+/*********/
+template <class T> T * h_zeros(const int M, const int N);
+
 /************/
 /* MESHGRID */
 /************/
