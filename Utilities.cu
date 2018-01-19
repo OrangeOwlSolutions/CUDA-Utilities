@@ -39,7 +39,6 @@ extern "C" void gpuErrchk(cudaError_t ans) { gpuAssert((ans), __FILE__, __LINE__
 /**************************/
 /* CUSOLVE ERROR CHECKING */
 /**************************/
-#if (__CUDACC_VER__ >= 70000)
 static const char *_cusolverGetErrorEnum(cusolverStatus_t error)
 {
 	switch (error)
@@ -83,7 +82,6 @@ inline void __cusolveSafeCall(cusolverStatus_t err, const char *file, const int 
 }
 
 extern "C" void cusolveSafeCall(cusolverStatus_t err) { __cusolveSafeCall(err, __FILE__, __LINE__); }
-#endif
 
 /*************************/
 /* CUBLAS ERROR CHECKING */
