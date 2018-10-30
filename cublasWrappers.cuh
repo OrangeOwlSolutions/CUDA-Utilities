@@ -13,4 +13,10 @@ cublasStatus_t cublasTdot(cublasHandle_t, int, const double *, int, const double
 cublasStatus_t cublasTaxpy(cublasHandle_t, int, const float  *, const float  *, int, float  *, int);
 cublasStatus_t cublasTaxpy(cublasHandle_t, int, const double *, const double *, int, double *, int);
 
+/***************/
+/* CUBLASTCOPY */
+/***************/
+cublasStatus_t cublasTcopy(cublasHandle_t, int, const float *, int, float *, int);
+cublasStatus_t cublastcopy(cublasHandle_t, int, const double *, int, double *, int);
+
 #endif
