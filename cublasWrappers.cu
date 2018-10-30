@@ -22,3 +22,15 @@ cublasStatus_t cublasTaxpy(cublasHandle_t handle, int n, const double *alpha, co
 	return cublasDaxpy(handle, n, alpha, x, incx, y, incy);
 }
 
+/***************/
+/* CUBLASTCOPY */
+/***************/
+cublasStatus_t cublasTcopy(cublasHandle_t handle, int n, const float *x, int incx, float *y, int incy) {
+	return cublasScopy(handle, n, x, incx, y, incy);
+}
+
+cublasStatus_t cublastcopy(cublasHandle_t handle, int n, const double *x, int incx, double *y, int incy) {
+	return cublasDcopy(handle, n, x, incx, y, incy);
+}
+
+ 
