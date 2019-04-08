@@ -15,6 +15,7 @@ extern "C" void cusolveSafeCall(cusolverStatus_t);
 extern "C" void cublasSafeCall(cublasStatus_t);
 extern "C" void cufftSafeCall(cufftResult err);
 extern "C" void cusparseSafeCall(cusparseStatus_t err);
+extern "C" void curandSafeCall(curandStatus_t err);
 
 template <class T>
 void reverseArray(const T * __restrict__, T * __restrict__, const int, const T a = static_cast<T>(1));
